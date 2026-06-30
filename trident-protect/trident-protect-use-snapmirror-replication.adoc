@@ -1,0 +1,649 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-use-snapmirror-replication.html 
+keywords: trident, protect, netapp, snapmirror, data, asynchronous, replication, clusters 
+summary: Trident Protect를 사용하면 NetApp SnapMirror 기술의 비동기 복제 기능을 활용하여 동일한 클러스터 내에서 또는 서로 다른 클러스터 간에 데이터 및 애플리케이션 변경 사항을 한 스토리지 백엔드에서 다른 스토리지 백엔드로 복제할 수 있습니다. 
+---
+= NetApp SnapMirror 및 Trident Protect를 사용하여 애플리케이션을 복제합니다
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident Protect를 사용하면 NetApp SnapMirror 기술의 비동기 복제 기능을 활용하여 동일한 클러스터 내에서 또는 서로 다른 클러스터 간에 데이터 및 애플리케이션 변경 사항을 한 스토리지 백엔드에서 다른 스토리지 백엔드로 복제할 수 있습니다.
+
+
+
+== 복원 및 페일오버 작업 중 네임스페이스 주석 및 레이블
+
+복원 및 페일오버 작업 중에 대상 네임스페이스의 레이블과 주석은 소스 네임스페이스의 레이블과 주석과 일치하도록 조정됩니다. 대상 네임스페이스에 존재하지 않는 소스 네임스페이스의 레이블 또는 주석은 추가되며, 이미 존재하는 레이블 또는 주석은 소스 네임스페이스의 값과 일치하도록 덮어쓰여집니다. 대상 네임스페이스에만 존재하는 레이블 또는 주석은 변경되지 않습니다.
+
+
+NOTE: Red Hat OpenShift를 사용하는 경우 OpenShift 환경에서 네임스페이스 어노테이션의 중요한 역할을 알아두는 것이 중요합니다. 네임스페이스 어노테이션은 복원된 Pod가 OpenShift 보안 컨텍스트 제약 조건(SCC)에 정의된 적절한 권한 및 보안 구성을 준수하고 권한 문제 없이 볼륨에 액세스할 수 있도록 보장합니다. 자세한 내용은 link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/authentication_and_authorization/managing-pod-security-policies["OpenShift 보안 컨텍스트 제약 조건 문서"^]를 참조하십시오.
+
+복원 또는 장애 조치 작업을 수행하기 전에 Kubernetes 환경 변수 `RESTORE_SKIP_NAMESPACE_ANNOTATIONS`를 설정하여 대상 네임스페이스의 특정 어노테이션이 덮어쓰여지는 것을 방지할 수 있습니다. 예를 들면 다음과 같습니다.
+
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect \
+  --set-string restoreSkipNamespaceAnnotations="{<annotation_key_to_skip_1>,<annotation_key_to_skip_2>}" \
+  --reuse-values
+----
+
+NOTE: 복원 또는 페일오버 작업을 수행할 때 `restoreSkipNamespaceAnnotations` 및 `restoreSkipNamespaceLabels`에 지정된 네임스페이스 주석 및 레이블은 복원 또는 페일오버 작업에서 제외됩니다. 초기 Helm 설치 시 이러한 설정이 구성되어 있는지 확인하십시오. 자세한 내용은 link:../trident-protect/trident-protect-customize-installation.html#configure-additional-trident-protect-helm-chart-settings["Trident Protect 헬름 차트의 추가 설정을 구성합니다"]를 참조하십시오.
+
+ `--create-namespace` 플래그와 함께 Helm을 사용하여 소스 애플리케이션을 설치한 경우  `name` 레이블 키에 특별한 처리가 적용됩니다. 복원 또는 페일오버 프로세스 중에 Trident Protect는 이 레이블을 대상 네임스페이스로 복사하지만 소스의 값이 소스 네임스페이스와 일치하는 경우 값을 대상 네임스페이스 값으로 업데이트합니다. 이 값이 소스 네임스페이스와 일치하지 않으면 변경 없이 대상 네임스페이스로 복사됩니다.
+
+
+
+=== 예
+
+다음 예제는 서로 다른 어노테이션과 레이블을 가진 소스 및 대상 네임스페이스를 보여줍니다. 작업 전후의 대상 네임스페이스 상태와 어노테이션 및 레이블이 대상 네임스페이스에서 어떻게 결합되거나 덮어쓰여지는지 확인할 수 있습니다.
+
+
+
+==== 복원 또는 페일오버 작업 전에
+
+다음 표는 복원 또는 페일오버 작업 전 예시 소스 및 대상 네임스페이스의 상태를 보여줍니다.
+
+[cols="1,2a,2a"]
+|===
+| 네임스페이스 | 주석 | 라벨 
+
+
+| 네임스페이스 ns-1(소스)  a| 
+* annotation.one/key: "updatedvalue"
+* annotation.two/key: "true"
+
+ a| 
+* environment=production
+* 컴플라이언스=hipaa
+* name=ns-1
+
+
+
+
+| 네임스페이스 ns-2(대상)  a| 
+* annotation.one/key: "true"
+* annotation.three/key: "false"
+
+ a| 
+* role=database
+
+
+|===
+
+
+==== 복원 작업 후
+
+다음 표는 복원 또는 장애 조치 작업 후 예시 대상 네임스페이스의 상태를 보여줍니다. 일부 키가 추가되었고, 일부는 덮어쓰여졌으며,  `name` 레이블은 대상 네임스페이스와 일치하도록 업데이트되었습니다.
+
+[cols="1,2a,2a"]
+|===
+| 네임스페이스 | 주석 | 라벨 
+
+
+| 네임스페이스 ns-2(대상)  a| 
+* annotation.one/key: "updatedvalue"
+* annotation.two/key: "true"
+* annotation.three/key: "false"
+
+ a| 
+* name=ns-2
+* 컴플라이언스=hipaa
+* environment=production
+* role=database
+
+
+|===
+
+NOTE: Trident Protect를 구성하면 데이터 보호 작업 중에 파일 시스템을 동결 및 해제할 수 있습니다. link:trident-protect-requirements.html#protecting-data-with-kubevirt-vms["Trident Protect를 사용한 파일 시스템 동결 구성에 대해 자세히 알아보십시오"].
+
+
+
+== 페일오버 및 역방향 작업 중 실행 후크
+
+AppMirror 관계를 사용하여 애플리케이션을 보호할 때 페일오버 및 역방향 작업 중에 알아야 할 실행 후크와 관련된 특정 동작이 있습니다.
+
+* 장애 조치 시 실행 후크는 소스 클러스터에서 타겟 클러스터로 자동으로 복사됩니다. 수동으로 다시 생성할 필요가 없습니다. 장애 조치가 완료되면 애플리케이션에 실행 후크가 존재하며 관련 작업이 수행될 때 실행됩니다.
+* 역방향 또는 역방향 재동기화 중에 애플리케이션의 기존 실행 후크가 제거됩니다. 소스 애플리케이션이 타겟 애플리케이션이 되면 이러한 실행 후크는 유효하지 않으며 실행을 방지하기 위해 삭제됩니다.
+
+
+실행 후크에 대한 자세한 내용은 link:../trident-protect/trident-protect-use-execution-hooks.html["Trident Protect 실행 후크 관리"]을(를) 참조하십시오.
+
+
+
+== 복제 관계를 설정합니다
+
+복제 관계를 설정하는 과정은 다음과 같습니다.
+
+* Trident Protect에서 앱 스냅샷(앱의 Kubernetes 리소스와 앱의 각 볼륨에 대한 볼륨 스냅샷 포함)을 생성할 빈도를 선택합니다
+* 복제 일정 선택(Kubernetes 리소스 및 영구 볼륨 데이터 포함)
+* 스냅샷을 생성할 시간 설정
+
+
+.단계
+. 소스 클러스터에서 소스 애플리케이션용 AppVault를 생성합니다. 스토리지 공급자에 따라 link:trident-protect-appvault-custom-resources.html["AppVault 사용자 지정 리소스"]의 예제를 환경에 맞게 수정하십시오.
++
+[role="tabbed-block"]
+====
+.CR을 사용하여 AppVault를 생성합니다
+--
+.. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-appvault-primary-source.yaml`).
+.. 다음 속성을 구성하십시오.
++
+*** *metadata.name*: (_필수_) AppVault 사용자 지정 리소스의 이름입니다. 복제 관계에 필요한 다른 CR 파일에서 이 값을 참조하므로 선택한 이름을 기록해 두십시오.
+*** *spec.providerConfig*: (_필수_) 지정된 공급자를 사용하여 AppVault에 액세스하는 데 필요한 구성을 저장합니다. bucketName 및 공급자에 필요한 기타 세부 정보를 선택하십시오. 복제 관계에 필요한 다른 CR 파일에서 이러한 값을 참조하므로 선택한 값을 기록해 두십시오. 다른 공급자를 사용하는 AppVault CR의 예는 link:trident-protect-appvault-custom-resources.html["AppVault 사용자 지정 리소스"]를 참조하십시오.
+*** *spec.providerCredentials*: (_필수_) 지정된 공급자를 사용하여 AppVault에 액세스하는 데 필요한 자격 증명에 대한 참조를 저장합니다.
++
+**** *spec.providerCredentials.valueFromSecret*: (_필수_) 자격 증명 값이 비밀 키에서 가져와야 함을 나타냅니다.
++
+***** *key*: (_필수_) 선택할 시크릿의 유효한 키입니다.
+***** *name*: (_필수_) 이 필드의 값을 포함하는 시크릿의 이름입니다. 동일한 네임스페이스에 있어야 합니다.
+
+
+**** *spec.providerCredentials.secretAccessKey*: (_필수_) 공급자에 액세스하는 데 사용되는 액세스 키입니다. *name*은 *spec.providerCredentials.valueFromSecret.name*과 일치해야 합니다.
+
+
+*** *spec.providerType*: (_필수_) 백업을 제공하는 서비스(예: NetApp ONTAP S3, 일반 S3, Google Cloud 또는 Microsoft Azure)를 지정합니다. 가능한 값:
++
+**** aws
+**** Azure
+**** gcp
+**** generic-s3
+**** ONTAP S3
+**** storagegrid-s3
+
+
+
+
+..  `trident-protect-appvault-primary-source.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-appvault-primary-source.yaml -n trident-protect
+----
+
+
+--
+.CLI를 사용하여 AppVault를 생성합니다
+--
+.. AppVault를 생성하고 괄호 안의 값을 사용자 환경 정보로 바꾸세요.
++
+[source, console]
+----
+tridentctl-protect create vault Azure <vault-name> --account <account-name> --bucket <bucket-name> --secret <secret-name> -n trident-protect
+----
+
+
+--
+====
+. 소스 클러스터에서 소스 애플리케이션 CR을 생성합니다.
++
+[role="tabbed-block"]
+====
+.CR을 사용하여 소스 애플리케이션을 생성합니다
+--
+.. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-app-source.yaml`).
+.. 다음 속성을 구성하십시오.
++
+*** *metadata.name*: (_필수_) 애플리케이션 사용자 지정 리소스의 이름입니다. 복제 관계에 필요한 다른 CR 파일에서 이 값을 참조하므로 선택한 이름을 기록해 두십시오.
+*** *spec.includedNamespaces*: (_필수_) 네임스페이스 및 관련 레이블 배열입니다. 네임스페이스 이름을 사용하고 선택적으로 레이블을 사용하여 네임스페이스의 범위를 좁혀 여기에 나열된 네임스페이스에 존재하는 리소스를 지정합니다. 애플리케이션 네임스페이스는 이 배열에 반드시 포함되어야 합니다.
++
+*YAML 예*:
+
++
+[source, yaml]
+----
+---
+apiVersion: protect.trident.netapp.io/v1
+kind: Application
+metadata:
+  name: my-app-name
+  namespace: my-app-namespace
+spec:
+  includedNamespaces:
+    - namespace: my-app-namespace
+      labelSelector: {}
+----
+
+
+..  `trident-protect-app-source.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-app-source.yaml -n my-app-namespace
+----
+
+
+--
+.CLI를 사용하여 소스 애플리케이션 생성
+--
+.. 소스 애플리케이션을 생성합니다. 예를 들면 다음과 같습니다.
++
+[source, console]
+----
+tridentctl-protect create app <my-app-name> --namespaces <namespaces-to-be-included> -n <my-app-namespace>
+----
+
+
+--
+====
+. 선택적으로 소스 클러스터에서 소스 애플리케이션의 스냅샷을 생성할 수 있습니다. 이 스냅샷은 타겟 클러스터의 애플리케이션에 대한 기반으로 사용됩니다. 이 단계를 건너뛰면 최신 스냅샷을 얻기 위해 다음 예약된 스냅샷이 실행될 때까지 기다려야 합니다. 온디맨드 스냅샷을 생성하려면 link:https://docs.netapp.com/us-en/trident/trident-protect/trident-protect-protect-apps.html#create-an-on-demand-snapshot["온디맨드 스냅샷 생성"^]을 참조하십시오.
+. 소스 클러스터에서 복제 일정 CR을 생성합니다.
++
+[NOTE]
+====
+아래 제공된 일정 외에도, 피어링된 ONTAP 클러스터 간의 공통 스냅샷을 유지하기 위해 7일의 보존 기간을 가진 별도의 일일 스냅샷 일정을 생성하는 것이 좋습니다. 이렇게 하면 스냅샷을 최대 7일 동안 사용할 수 있지만, 보존 기간은 사용자 요구 사항에 따라 사용자 지정할 수 있습니다.
+
+장애 조치가 발생할 경우, 시스템은 최대 7일 동안 이러한 스냅샷을 사용하여 역방향 작업을 수행할 수 있습니다. 이 방식을 통해 역방향 프로세스는 모든 데이터가 아닌 마지막 스냅샷 이후 변경된 내용만 전송되므로 더 빠르고 효율적으로 진행됩니다.
+
+애플리케이션에 대한 기존 스케줄이 원하는 보존 요구 사항을 이미 충족하는 경우 추가 스케줄이 필요하지 않습니다.
+
+====
++
+[role="tabbed-block"]
+====
+.CR을 사용하여 복제 일정을 생성합니다
+--
+.. 소스 애플리케이션에 대한 복제 일정을 생성합니다.
++
+... 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-schedule.yaml`).
+... 다음 속성을 구성하십시오.
++
+**** *metadata.name*: (_필수_) 스케줄 사용자 지정 리소스의 이름입니다.
+**** *spec.appVaultRef*: (_필수_) 이 값은 소스 애플리케이션의 AppVault에 있는 metadata.name 필드와 일치해야 합니다.
+**** *spec.applicationRef*: (_필수_) 이 값은 소스 애플리케이션 CR의 metadata.name 필드와 일치해야 합니다.
+**** *spec.backupRetention*: (_필수_) 이 필드는 필수이며 값을 0으로 설정해야 합니다.
+**** *spec.enabled*: true로 설정해야 합니다.
+**** *spec.granularity*:  `Custom`로 설정해야 합니다.
+**** *spec.recurrenceRule*: UTC 시간으로 시작 날짜와 반복 간격을 정의합니다.
+**** *spec.snapshotRetention*: 2로 설정해야 합니다.
++
+YAML 예:
+
++
+[source, yaml]
+----
+---
+apiVersion: protect.trident.netapp.io/v1
+kind: Schedule
+metadata:
+  name: appmirror-schedule
+  namespace: my-app-namespace
+spec:
+  appVaultRef: my-appvault-name
+  applicationRef: my-app-name
+  backupRetention: "0"
+  enabled: true
+  granularity: Custom
+  recurrenceRule: |-
+    DTSTART:20220101T000200Z
+    RRULE:FREQ=MINUTELY;INTERVAL=5
+  snapshotRetention: "2"
+----
+
+
+...  `trident-protect-schedule.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-schedule.yaml -n my-app-namespace
+----
+
+
+
+
+--
+.CLI를 사용하여 복제 스케줄 생성
+--
+.. 복제 일정을 생성하고 괄호 안의 값을 사용자 환경의 정보로 바꾸십시오.
++
+[source, console]
+----
+tridentctl-protect create schedule --name appmirror-schedule --app <my_app_name> --appvault <my_app_vault> --granularity Custom --recurrence-rule <rule> --snapshot-retention <snapshot_retention_count> -n <my_app_namespace>
+----
++
+*예:*
+
++
+[source, console]
+----
+tridentctl-protect create schedule --name appmirror-schedule --app <my_app_name> --appvault <my_app_vault> --granularity Custom --recurrence-rule  "DTSTART:20220101T000200Z\nRRULE:FREQ=MINUTELY;INTERVAL=5" --snapshot-retention 2 -n <my_app_namespace>
+----
+
+
+--
+====
+. 타겟 클러스터에서 소스 클러스터에 적용한 AppVault CR과 동일한 소스 애플리케이션 AppVault CR을 생성하고 이름을 지정합니다(예:  `trident-protect-appvault-primary-destination.yaml`).
+. CR 적용:
++
+[source, console]
+----
+kubectl apply -f trident-protect-appvault-primary-destination.yaml -n trident-protect
+----
+. 타겟 클러스터의 타겟 애플리케이션에 대한 타겟 AppVault CR을 생성합니다. 스토리지 공급자에 따라 link:trident-protect-appvault-custom-resources.html["AppVault 사용자 지정 리소스"]의 예제를 환경에 맞게 수정하십시오.
++
+.. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-appvault-secondary-destination.yaml`).
+.. 다음 속성을 구성하십시오.
++
+*** *metadata.name*: (_필수_) AppVault 사용자 지정 리소스의 이름입니다. 복제 관계에 필요한 다른 CR 파일에서 이 값을 참조하므로 선택한 이름을 기록해 두십시오.
+*** *spec.providerConfig*: (_필수_) 지정된 공급자를 사용하여 AppVault에 액세스하는 데 필요한 구성을 저장합니다.  `bucketName`및 공급자에 필요한 기타 세부 정보를 선택하십시오. 복제 관계에 필요한 다른 CR 파일에서 이러한 값을 참조하므로 선택한 값을 기록해 두십시오. 다른 공급자를 사용하는 AppVault CR의 예는 link:trident-protect-appvault-custom-resources.html["AppVault 사용자 지정 리소스"]를 참조하십시오.
+*** *spec.providerCredentials*: (_필수_) 지정된 공급자를 사용하여 AppVault에 액세스하는 데 필요한 자격 증명에 대한 참조를 저장합니다.
++
+**** *spec.providerCredentials.valueFromSecret*: (_필수_) 자격 증명 값이 비밀 키에서 가져와야 함을 나타냅니다.
++
+***** *key*: (_필수_) 선택할 시크릿의 유효한 키입니다.
+***** *name*: (_필수_) 이 필드의 값을 포함하는 시크릿의 이름입니다. 동일한 네임스페이스에 있어야 합니다.
+
+
+**** *spec.providerCredentials.secretAccessKey*: (_필수_) 공급자에 액세스하는 데 사용되는 액세스 키입니다. *name*은 *spec.providerCredentials.valueFromSecret.name*과 일치해야 합니다.
+
+
+*** *spec.providerType*: (_필수_) 백업을 제공하는 서비스(예: NetApp ONTAP S3, 일반 S3, Google Cloud 또는 Microsoft Azure)를 지정합니다. 가능한 값:
++
+**** aws
+**** Azure
+**** gcp
+**** generic-s3
+**** ONTAP S3
+**** storagegrid-s3
+
+
+
+
+..  `trident-protect-appvault-secondary-destination.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-appvault-secondary-destination.yaml -n trident-protect
+----
+
+
+. 타겟 클러스터에서 AppMirrorRelationship CR 파일을 생성합니다.
++
+
+NOTE: CR을 사용할 때는 CR을 적용하기 전에 타겟 네임스페이스를 수동으로 생성해야 합니다. Trident Protect는 CLI를 사용할 때만 네임스페이스를 자동으로 생성합니다.
+
++
+[role="tabbed-block"]
+====
+.CR을 사용하여 AppMirrorRelationship을 생성합니다
+--
+.. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-relationship.yaml`).
+.. 다음 속성을 구성하십시오.
++
+*** *metadata.name:* (필수) AppMirrorRelationship 사용자 지정 리소스의 이름입니다.
+*** *spec.destinationAppVaultRef*: (_필수_) 이 값은 타겟 클러스터의 타겟 애플리케이션에 대한 AppVault 이름과 일치해야 합니다.
+*** *spec.namespaceMapping*: (_필수_) 타겟 및 소스 네임스페이스는 각 애플리케이션 CR에 정의된 애플리케이션 네임스페이스와 일치해야 합니다.
+*** *spec.sourceAppVaultRef*: (_필수_) 이 값은 소스 애플리케이션의 AppVault 이름과 일치해야 합니다.
+*** *spec.sourceApplicationName*: (_필수_) 이 값은 소스 애플리케이션 CR에 정의한 소스 애플리케이션의 이름과 일치해야 합니다.
+*** *spec.sourceApplicationUID*: (필수) 이 값은 소스 애플리케이션 CR에 정의한 소스 애플리케이션의 UID와 일치해야 합니다.
+*** *spec.storageClassName*: (_선택 사항_) 클러스터에서 유효한 스토리지 클래스의 이름을 선택하십시오. 스토리지 클래스는 소스 환경과 피어링된 ONTAP 스토리지 VM에 연결되어 있어야 합니다. 스토리지 클래스를 제공하지 않으면 클러스터의 기본 스토리지 클래스가 기본적으로 사용됩니다.
+*** *spec.recurrenceRule*: UTC 시간으로 시작 날짜와 반복 간격을 정의합니다.
++
+YAML 예:
+
++
+[source, yaml]
+----
+---
+apiVersion: protect.trident.netapp.io/v1
+kind: AppMirrorRelationship
+metadata:
+  name: amr-16061e80-1b05-4e80-9d26-d326dc1953d8
+  namespace: my-app-namespace
+spec:
+  desiredState: Established
+  destinationAppVaultRef: generic-s3-trident-protect-dst-bucket-8fe0b902-f369-4317-93d1-ad7f2edc02b5
+  namespaceMapping:
+    - destination: my-app-namespace
+      source: my-app-namespace
+  recurrenceRule: |-
+    DTSTART:20220101T000200Z
+    RRULE:FREQ=MINUTELY;INTERVAL=5
+  sourceAppVaultRef: generic-s3-trident-protect-src-bucket-b643cc50-0429-4ad5-971f-ac4a83621922
+  sourceApplicationName: my-app-name
+  sourceApplicationUID: 7498d32c-328e-4ddd-9029-122540866aeb
+  storageClassName: sc-vsim-2
+----
+
+
+..  `trident-protect-relationship.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-relationship.yaml -n my-app-namespace
+----
+
+
+--
+.CLI를 사용하여 AppMirrorRelationship 생성
+--
+.. AppMirrorRelationship 객체를 생성하고 적용합니다. 괄호 안의 값은 사용자 환경의 정보로 바꿔야 합니다.
++
+[source, console]
+----
+tridentctl-protect create appmirrorrelationship <name_of_appmirorrelationship> --destination-app-vault <my_vault_name> --source-app-vault <my_vault_name> --recurrence-rule <rule> --namespace-mapping <ns_mapping> --source-app-id <source_app_UID> --source-app <my_source_app_name> --storage-class <storage_class_name> -n <application_namespace>
+----
++
+*예:*
+
++
+[source, console]
+----
+tridentctl-protect create appmirrorrelationship my-amr --destination-app-vault appvault2 --source-app-vault appvault1 --recurrence-rule "DTSTART:20220101T000200Z\nRRULE:FREQ=MINUTELY;INTERVAL=5" --source-app my-app --namespace-mapping "my-source-ns1:my-dest-ns1,my-source-ns2:my-dest-ns2" --source-app-id 373f24c1-5769-404c-93c3-5538af6ccc36 --storage-class my-storage-class -n my-dest-ns1
+----
+
+
+--
+====
+. (선택 사항) 타겟 클러스터에서 복제 관계의 상태를 확인합니다.
++
+[source, console]
+----
+kubectl get amr -n my-app-namespace <relationship name> -o=jsonpath='{.status}' | jq
+----
+
+
+
+
+=== 타겟 클러스터로 페일오버
+
+Trident Protect를 사용하면 복제된 애플리케이션을 타겟 클러스터로 페일오버할 수 있습니다. 이 절차는 복제 관계를 중지하고 타겟 클러스터에서 애플리케이션을 온라인 상태로 전환합니다. Trident Protect는 소스 클러스터에서 애플리케이션이 작동 중인 경우 해당 애플리케이션을 중지하지 않습니다.
+
+.단계
+. 타겟 클러스터에서 AppMirrorRelationship CR 파일(예:  `trident-protect-relationship.yaml`)을 편집하고 *spec.desiredState* 값을  `Promoted`로 변경합니다.
+. CR 파일을 저장합니다.
+. CR 적용:
++
+[source, console]
+----
+kubectl apply -f trident-protect-relationship.yaml -n my-app-namespace
+----
+. (_선택 사항_) 페일오버된 애플리케이션에 필요한 보호 스케줄을 생성합니다.
+. (_선택 사항_) 복제 관계의 상태를 확인합니다:
++
+[source, console]
+----
+kubectl get amr -n my-app-namespace <relationship name> -o=jsonpath='{.status}' | jq
+----
+
+
+
+
+=== 페일오버된 복제 관계 재동기화
+
+재동기화 작업은 복제 관계를 다시 설정합니다. 재동기화 작업을 수행하면 원래 소스 애플리케이션이 실행 중인 애플리케이션이 되고 타겟 클러스터에서 실행 중인 애플리케이션에 대한 변경 사항은 모두 삭제됩니다.
+
+이 프로세스는 복제를 다시 설정하기 전에 타겟 클러스터에서 앱을 중지합니다.
+
+
+IMPORTANT: 페일오버 중에 타겟 애플리케이션에 기록된 모든 데이터는 손실됩니다.
+
+.단계
+. 선택 사항: 소스 클러스터에서 소스 애플리케이션의 스냅샷을 생성합니다. 이렇게 하면 소스 클러스터의 최신 변경 사항이 캡처됩니다.
+. 타겟 클러스터에서 AppMirrorRelationship CR 파일(예: `trident-protect-relationship.yaml`)을 편집하고 spec.desiredState 값을 `Established`로 변경합니다.
+. CR 파일을 저장합니다.
+. CR 적용:
++
+[source, console]
+----
+kubectl apply -f trident-protect-relationship.yaml -n my-app-namespace
+----
+. 장애 조치된 애플리케이션을 보호하기 위해 타겟 클러스터에 보호 일정을 생성한 경우 해당 일정을 제거합니다. 남아 있는 모든 일정은 볼륨 스냅샷 실패의 원인이 됩니다.
+
+
+
+
+=== 페일오버된 복제 관계 역 재동기화
+
+장애 조치 복제 관계를 역동기화하면 타겟 애플리케이션이 소스 애플리케이션이 되고 소스가 타겟이 됩니다. 장애 조치 중에 타겟 애플리케이션에 변경된 내용은 유지됩니다.
+
+.단계
+. 원래 타겟 클러스터에서 AppMirrorRelationship CR을 삭제합니다. 이렇게 하면 타겟이 소스가 됩니다. 새 타겟 클러스터에 보호 스케줄이 남아 있는 경우 이를 제거합니다.
+. 원래 관계를 설정하는 데 사용한 CR 파일을 반대 클러스터에 적용하여 복제 관계를 설정합니다.
+. 새 타겟(원본 소스 클러스터)에 AppVault CR이 모두 구성되어 있는지 확인합니다.
+. 반대쪽 클러스터에 복제 관계를 설정하여 반대 방향에 대한 값을 구성합니다.
+
+
+
+
+== 애플리케이션 복제 방향 반전
+
+복제 방향을 반대로 하면 Trident Protect는 원래 소스 스토리지 백엔드로 계속 복제하면서 애플리케이션을 타겟 스토리지 백엔드로 이동합니다. Trident Protect는 소스 애플리케이션을 중지하고 타겟 앱으로 페일오버하기 전에 데이터를 타겟으로 복제합니다.
+
+이 상황에서는 소스와 타겟을 교체하는 것입니다.
+
+.단계
+. 소스 클러스터에서 종료 스냅샷을 생성합니다.
++
+[role="tabbed-block"]
+====
+.CR을 사용하여 종료 스냅샷 생성
+--
+.. 소스 애플리케이션에 대한 보호 정책 스케줄을 비활성화합니다.
+.. ShutdownSnapshot CR 파일을 생성합니다.
++
+... 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-shutdownsnapshot.yaml`).
+... 다음 속성을 구성하십시오.
++
+**** *metadata.name*: (_필수_) 사용자 지정 리소스의 이름입니다.
+**** *spec.AppVaultRef*: (_필수_) 이 값은 소스 애플리케이션에 대한 AppVault의 metadata.name 필드와 일치해야 합니다.
+**** *spec.ApplicationRef*: (_필수_) 이 값은 소스 애플리케이션 CR 파일의 metadata.name 필드와 일치해야 합니다.
++
+YAML 예:
+
++
+[source, yaml]
+----
+---
+apiVersion: protect.trident.netapp.io/v1
+kind: ShutdownSnapshot
+metadata:
+  name: replication-shutdown-snapshot-afc4c564-e700-4b72-86c3-c08a5dbe844e
+  namespace: my-app-namespace
+spec:
+  appVaultRef: generic-s3-trident-protect-src-bucket-04b6b4ec-46a3-420a-b351-45795e1b5e34
+  applicationRef: my-app-name
+----
+
+
+
+
+..  `trident-protect-shutdownsnapshot.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-shutdownsnapshot.yaml -n my-app-namespace
+----
+
+
+--
+.CLI를 사용하여 종료 스냅샷 만들기
+--
+.. 종료 스냅샷을 만들고 괄호 안의 값을 사용자 환경의 정보로 바꿉니다. 예를 들면 다음과 같습니다.
++
+[source, console]
+----
+tridentctl-protect create shutdownsnapshot <my_shutdown_snapshot> --appvault <my_vault> --app <app_to_snapshot> -n <application_namespace>
+----
+
+
+--
+====
+. 소스 클러스터에서 종료 스냅샷이 완료된 후 종료 스냅샷의 상태를 확인합니다.
++
+[source, console]
+----
+kubectl get shutdownsnapshot -n my-app-namespace <shutdown_snapshot_name> -o yaml
+----
+. 소스 클러스터에서 다음 명령을 사용하여 *shutdownsnapshot.status.appArchivePath* 값을 찾고 파일 경로의 마지막 부분(베이스네임이라고도 함, 마지막 슬래시 뒤의 모든 부분)을 기록합니다.
++
+[source, console]
+----
+k get shutdownsnapshot -n my-app-namespace <shutdown_snapshot_name> -o jsonpath='{.status.appArchivePath}'
+----
+. 다음과 같은 변경 사항을 적용하여 새 타겟 클러스터에서 새 소스 클러스터로 페일오버를 수행하십시오.
++
+
+NOTE: 장애 조치 절차의 2단계에서 AppMirrorRelationship CR 파일에  `spec.promotedSnapshot` 필드를 포함하고, 그 값을 위 3단계에서 기록한 기본 이름으로 설정합니다.
+
+. <<페일오버된 복제 관계 역 재동기화>>에서 역방향 재동기화 단계를 수행하십시오.
+. 새 소스 클러스터에서 보호 스케줄을 활성화합니다.
+
+
+
+
+=== 결과
+
+역복제로 인해 다음 작업이 수행됩니다.
+
+* 원본 소스 애플리케이션의 Kubernetes 리소스에 대한 스냅샷이 생성됩니다.
+* 원래 소스 앱의 Pod는 앱의 Kubernetes 리소스를 삭제하여 정상적으로 중지됩니다(PVC 및 PV는 그대로 유지됨).
+* Pod가 종료된 후 앱 볼륨의 스냅샷이 생성되어 복제됩니다.
+* SnapMirror 관계가 끊어져 타겟 볼륨을 읽기/쓰기에 사용할 수 있습니다.
+* 앱의 Kubernetes 리소스는 원래 소스 앱이 종료된 후 복제된 볼륨 데이터를 사용하여 종료 전 스냅샷에서 복원됩니다.
+* 복제는 역방향으로 다시 설정됩니다.
+
+
+
+
+=== 애플리케이션을 원래 소스 클러스터로 페일백
+
+Trident Protect를 사용하면 다음 일련의 작업을 통해 페일오버 작업 후 "페일 백"을 구현할 수 있습니다. 원래 복제 방향을 복원하는 이 워크플로에서 Trident Protect는 복제 방향을 반전하기 전에 모든 애플리케이션 변경 사항을 원래 소스 애플리케이션으로 복제(재동기화)합니다.
+
+이 프로세스는 타겟으로 페일오버가 완료된 관계에서 시작되며 다음 단계를 포함합니다.
+
+* 장애 조치 상태로 시작합니다.
+* 복제 관계를 역방향으로 다시 동기화합니다.
++
+
+CAUTION: 일반적인 재동기화 작업을 수행하지 마십시오. 이 작업을 수행하면 장애 조치 절차 중에 타겟 클러스터에 기록된 데이터가 손실됩니다.
+
+* 복제 방향을 반대로 합니다.
+
+
+.단계
+. <<페일오버된 복제 관계 역 재동기화>> 단계를 수행하십시오.
+. <<애플리케이션 복제 방향 반전>> 단계를 수행하십시오.
+
+
+
+
+=== 복제 관계 삭제
+
+언제든지 복제 관계를 삭제할 수 있습니다. 애플리케이션 복제 관계를 삭제하면 서로 아무런 관계가 없는 두 개의 별개의 애플리케이션이 생성됩니다.
+
+.단계
+. 현재 타겟 클러스터에서 AppMirrorRelationship CR을 삭제합니다.
++
+[source, console]
+----
+kubectl delete -f trident-protect-relationship.yaml -n my-app-namespace
+----
+

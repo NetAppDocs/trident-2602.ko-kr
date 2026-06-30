@@ -1,0 +1,200 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-requirements.html 
+keywords: trident protect, application, cluster, snapmirror replication, ontap, configuration 
+summary: 먼저 운영 환경, 애플리케이션 클러스터, 애플리케이션 및 라이선스의 준비 상태를 확인하십시오. Trident Protect를 배포하고 운영하기 위한 요구 사항을 환경이 충족하는지 확인하십시오. 
+---
+= Trident Protect 요구 사항
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+먼저 운영 환경, 애플리케이션 클러스터, 애플리케이션 및 라이선스의 준비 상태를 확인하십시오. Trident Protect를 배포하고 운영하기 위한 요구 사항을 환경이 충족하는지 확인하십시오.
+
+
+
+== Trident Protect Kubernetes 클러스터 호환성
+
+Trident Protect는 다음을 포함한 다양한 완전 관리형 및 자체 관리형 Kubernetes 제품과 호환됩니다.
+
+* Amazon Elastic Kubernetes Service(EKS)
+* Google Kubernetes Engine(GKE)
+* Microsoft Azure Kubernetes Service(AKS)
+* Red Hat OpenShift
+* SUSE Harvester 1.7.0(ONTAP iSCSI)
+* SUSE Rancher
+* VMware Tanzu Portfolio
+* 업스트림 Kubernetes
+
+
+[NOTE]
+====
+* Trident Protect 백업은 Linux 컴퓨팅 노드에서만 지원됩니다. Windows 컴퓨팅 노드에서는 백업 작업이 지원되지 않습니다.
+* Trident Protect를 설치할 클러스터에 실행 중인 스냅샷 컨트롤러와 관련 CRD가 구성되어 있는지 확인하십시오. 스냅샷 컨트롤러를 설치하려면 https://docs.netapp.com/us-en/trident/trident-use/vol-snapshots.html#deploy-a-volume-snapshot-controller["이 지침"]를 참조하십시오.
+* 하나 이상의 VolumeSnapshotClass가 존재하는지 확인하십시오. 자세한 내용은 link:https://docs.netapp.com/us-en/trident/trident-reference/objects.html#kubernetes-volumesnapshotclass-objects["VolumeSnapshotClass"]을 참조하십시오.
+* Trident Protect를 설치하려면 Helm 4.x 이상이 필요합니다.
+
+
+====
+
+
+== Trident Protect 스토리지 백엔드 호환성
+
+Trident Protect는 다음과 같은 스토리지 백엔드를 지원합니다.
+
+* Amazon FSx for NetApp ONTAP
+* Cloud Volumes ONTAP
+* ONTAP 스토리지 어레이
+* Google Cloud NetApp Volumes
+* Azure NetApp Files
+
+
+스토리지 백엔드가 다음 요구 사항을 충족하는지 확인하십시오.
+
+* 클러스터에 연결된 NetApp 스토리지가 Trident 24.02 이상 버전(Trident 24.10 권장)을 사용하고 있는지 확인하십시오.
+
+
+* NetApp ONTAP 스토리지 백엔드가 있는지 확인하십시오.
+* 백업 저장을 위한 오브젝트 스토리지 버킷을 구성했는지 확인하십시오.
+* 애플리케이션 또는 애플리케이션 데이터 관리 작업에 사용할 애플리케이션 네임스페이스를 생성하십시오. Trident Protect는 이러한 네임스페이스를 자동으로 생성하지 않으므로 사용자 지정 리소스에 존재하지 않는 네임스페이스를 지정하면 작업이 실패합니다.
+
+
+
+
+== nas-economy 볼륨에 대한 요구 사항
+
+Trident Protect는 nas-economy 볼륨에 대한 백업 및 복원 작업을 지원합니다. 스냅샷, 클론 및 SnapMirror 복제는 현재 nas-economy 볼륨에 대해 지원되지 않습니다. Trident Protect에서 사용할 각 nas-economy 볼륨에 대해 스냅샷 디렉터리를 활성화해야 합니다.
+
+[NOTE]
+====
+일부 애플리케이션은 스냅샷 디렉터리를 사용하는 볼륨과 호환되지 않습니다. 이러한 애플리케이션의 경우 ONTAP 스토리지 시스템에서 다음 명령을 실행하여 스냅샷 디렉터리를 숨겨야 합니다.
+
+[source, console]
+----
+nfs modify -vserver <svm> -v3-hide-snapshot enabled
+----
+====
+각 nas-economy 볼륨에 대해 다음 명령을 실행하여 스냅샷 디렉터리를 활성화할 수 있습니다.  `<volume-UUID>`을(를) 변경하려는 볼륨의 UUID로 바꾸십시오.
+
+[source, console]
+----
+tridentctl update volume <volume-UUID> --snapshot-dir=true --pool-level=true -n trident
+----
+
+NOTE: Trident 백엔드 구성 옵션 `snapshotDir`을  `true`로 설정하여 새 볼륨에 대해 스냅샷 디렉터리를 기본적으로 활성화할 수 있습니다. 기존 볼륨에는 영향을 미치지 않습니다.
+
+
+
+== KubeVirt VM으로 데이터 보호
+
+Trident Protect는 데이터 보호 작업 중 KubeVirt 가상 머신에 대한 파일 시스템 동결 및 동결 해제 기능을 제공하여 데이터 일관성을 보장합니다. VM 동결 작업에 대한 구성 방법과 기본 동작은 Trident Protect 버전에 따라 다르며, 최신 릴리스에서는 Helm 차트 매개변수를 통해 간소화된 구성을 제공합니다.
+
+
+NOTE: 복원 작업 중에는 가상 머신(VM)에 대해 생성된 `VirtualMachineSnapshots`는 복원되지 않습니다.
+
+.Trident Protect 25.10 이상
+[%collapsible%open]
+====
+Trident Protect는 데이터 보호 작업 중에 일관성을 보장하기 위해 KubeVirt 파일 시스템을 자동으로 동결 및 해제합니다. Trident Protect 25.10부터는 Helm 차트 설치 시  `vm.freeze` 매개변수를 사용하여 이 동작을 비활성화할 수 있습니다. 이 매개변수는 기본적으로 활성화되어 있습니다.
+
+[source, console]
+----
+helm install ... --set vm.freeze=false ...
+----
+====
+.Trident Protect 24.10.1 ~ 25.06
+[%collapsible]
+====
+Trident Protect 24.10.1부터 Trident Protect는 데이터 보호 작업 중에 KubeVirt 파일 시스템을 자동으로 동결 및 해제합니다. 필요에 따라 다음 명령을 사용하여 이 자동 동작을 비활성화할 수 있습니다:
+
+[source, console]
+----
+kubectl set env deployment/trident-protect-controller-manager NEPTUNE_VM_FREEZE=false -n trident-protect
+----
+====
+.Trident Protect 24.10
+[%collapsible]
+====
+Trident Protect 24.10은 데이터 보호 작업 중에 KubeVirt VM 파일 시스템의 일관된 상태를 자동으로 보장하지 않습니다. Trident Protect 24.10을 사용하여 KubeVirt VM 데이터를 보호하려면 데이터 보호 작업을 수행하기 전에 파일 시스템의 동결/해제 기능을 수동으로 활성화해야 합니다. 이렇게 하면 파일 시스템이 일관된 상태를 유지하게 됩니다.
+
+Trident Protect 24.10을 구성하여 link:https://docs.openshift.com/container-platform/4.16/virt/install/installing-virt.html["가상화 구성"^]을(를) 사용한 다음 다음 명령을 사용하여 데이터 보호 작업 중 VM 파일 시스템의 동결 및 해제를 관리할 수 있습니다.
+
+[source, console]
+----
+kubectl set env deployment/trident-protect-controller-manager NEPTUNE_VM_FREEZE=true -n trident-protect
+----
+====
+
+
+== SnapMirror 복제 요구 사항
+
+NetApp SnapMirror 복제는 다음 ONTAP 솔루션에서 Trident Protect와 함께 사용할 수 있습니다.
+
+* 온프레미스 NetApp FAS, AFF 및 ASA 시스템. SnapMirror Trident Protect를 사용한 복제는 현재 ASA r2 시스템에서 지원되지 않습니다.
+* NetApp ONTAP Select
+* NetApp Cloud Volumes ONTAP
+* Amazon FSx for NetApp ONTAP
+
+
+
+
+=== ONTAP 클러스터 요구 사항 SnapMirror 복제
+
+SnapMirror 복제를 사용하려는 경우 ONTAP 클러스터가 다음 요구 사항을 충족하는지 확인하십시오.
+
+* *NetApp Trident*: NetApp Trident는 ONTAP를 백엔드로 사용하는 소스 및 타겟 Kubernetes 클러스터 모두에 존재해야 합니다. Trident Protect는 다음 드라이버를 기반으로 하는 스토리지 클래스를 사용하여 NetApp SnapMirror 기술을 통한 복제를 지원합니다:
++
+** `ontap-nas`: NFS
+** `ontap-san`: iSCSI
+** `ontap-san`: FC
+** `ontap-san`: NVMe/TCP(최소 ONTAP 버전 9.15.1 필요)
+
+
+* *라이선스*: 데이터 보호 번들을 사용하는 ONTAP SnapMirror 비동기 라이선스는 소스 및 타겟 ONTAP 클러스터 모두에서 활성화되어야 합니다. 자세한 내용은 https://docs.netapp.com/us-en/ontap/data-protection/snapmirror-licensing-concept.html["SnapMirror ONTAP 라이센싱 개요"^]을 참조하십시오.
++
+ONTAP 9.10.1부터 모든 라이센스는 여러 기능을 활성화하는 단일 파일인 NetApp 라이센스 파일(NLF)로 제공됩니다. 자세한 내용은 link:https://docs.netapp.com/us-en/ontap/system-admin/manage-licenses-concept.html#licenses-included-with-ontap-one["ONTAP One에 포함된 라이센스"^]을 참조하십시오.
+
++
+
+NOTE: SnapMirror 비동기 보호 기능만 지원됩니다.
+
+
+
+
+
+=== SnapMirror 복제를 위한 피어링 고려 사항
+
+스토리지 백엔드 피어링을 사용하려는 경우 환경이 다음 요구 사항을 충족하는지 확인하십시오.
+
+* *클러스터 및 SVM*: ONTAP 스토리지 백엔드는 피어링되어야 합니다. 자세한 내용은 https://docs.netapp.com/us-en/ontap/peering/index.html["클러스터 및 SVM 피어링 개요"^]을 참조하십시오.
++
+
+NOTE: 두 ONTAP 클러스터 간의 복제 관계에 사용되는 SVM 이름이 고유한지 확인하십시오.
+
+* *NetApp Trident 및 SVM*: 피어링된 원격 SVM은 타겟 클러스터의 NetApp Trident에서 사용할 수 있어야 합니다.
+* *관리형 백엔드*: 복제 관계를 생성하려면 Trident Protect에 ONTAP 스토리지 백엔드를 추가하고 관리해야 합니다.
+
+
+
+
+=== SnapMirror 복제를 위한 Trident/ONTAP 구성
+
+Trident Protect를 사용하려면 소스 클러스터와 타겟 클러스터 모두에 대해 복제를 지원하는 스토리지 백엔드를 하나 이상 구성해야 합니다. 소스 클러스터와 타겟 클러스터가 동일한 경우, 최상의 복원력을 위해 타겟 애플리케이션은 소스 애플리케이션과 다른 스토리지 백엔드를 사용해야 합니다.
+
+
+
+=== SnapMirror 복제를 위한 Kubernetes 클러스터 요구 사항
+
+Kubernetes 클러스터가 다음 요구 사항을 충족하는지 확인하십시오.
+
+* *AppVault 접근성*: 소스 및 타겟 클러스터 모두 애플리케이션 객체 복제를 위해 AppVault에서 읽고 쓰기 위한 네트워크 액세스가 필요합니다.
+* *네트워크 연결*: 방화벽 규칙, 버킷 권한 및 IP 허용 목록을 구성하여 두 클러스터와 AppVault 간의 WAN 통신을 활성화합니다.
+
+
+
+NOTE: 많은 기업 환경에서는 WAN 연결 전반에 걸쳐 엄격한 방화벽 정책을 시행합니다. 복제를 구성하기 전에 인프라 팀과 함께 이러한 네트워크 요구 사항을 확인하십시오.

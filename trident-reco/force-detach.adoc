@@ -1,0 +1,273 @@
+---
+sidebar: sidebar 
+permalink: trident-reco/force-detach.html 
+keywords: force detach, automated failover, node health check, tridentnoderemediation, tridentnoderemediationtemplate, TNR, TNR template, NHC, node health check operator 
+summary: 여기에 나열된 정보를 사용하여 Trident로 상태 저장 애플리케이션의 페일오버를 자동화하십시오. 
+---
+= Trident를 사용하여 상태 저장 애플리케이션의 페일오버 자동화
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident의 강제 분리 기능은 Kubernetes 클러스터에서 비정상적인 노드로부터 볼륨을 자동으로 분리하여 데이터 손상을 방지하고 애플리케이션 가용성을 보장합니다. 이 기능은 노드가 응답하지 않거나 유지 보수를 위해 오프라인 상태가 되는 시나리오에서 특히 유용합니다.
+
+
+
+== 강제 분리에 대한 세부 정보
+
+강제 분리는  `ontap-san`,  `ontap-san-economy`,  `ontap-nas` 및  `ontap-nas-economy`에 대해서만 사용할 수 있습니다. 강제 분리를 활성화하기 전에 Kubernetes 클러스터에서 비정상 노드 종료(NGNS)를 활성화해야 합니다. NGNS는 Kubernetes 1.28 이상에서 기본적으로 활성화되어 있습니다. 자세한 내용은 link:https://kubernetes.io/docs/concepts/cluster-administration/node-shutdown/#non-graceful-node-shutdown["Kubernetes: 정상적이지 않은 노드 종료"^]을 참조하십시오.
+
+
+NOTE:  `ontap-nas` 또는  `ontap-nas-economy` 드라이버를 사용할 때는 백엔드 구성에서  `autoExportPolicy` 매개 변수를  `true`로 설정해야 Trident가 관리형 내보내기 정책을 사용하여 테인트가 적용된 Kubernetes 노드의 액세스를 제한할 수 있습니다.
+
+
+WARNING: Trident는 Kubernetes NGNS에 의존하므로 모든 허용 불가능한 워크로드가 재배치될 때까지 비정상 노드에서  `out-of-service`테인트를 제거하지 마십시오. 테인트를 부적절하게 적용하거나 제거하면 백엔드 데이터 보호가 위험해질 수 있습니다.
+
+Kubernetes 클러스터 관리자가 노드에 `node.kubernetes.io/out-of-service=nodeshutdown:NoExecute` 테인트를 적용하고 `enableForceDetach`가 `true`로 설정되면 Trident는 노드 상태를 확인하고 다음을 수행합니다.
+
+. 해당 노드에 마운트된 볼륨에 대한 백엔드 I/O 액세스를 중지합니다.
+. Trident 노드 객체를  `dirty`(새 게시에 안전하지 않음)로 표시합니다.
++
+
+NOTE: Trident 컨트롤러는 Trident 노드 Pod에서 노드가 재인증( `dirty`로 표시된 후)될 때까지 새로운 볼륨 게시 요청을 거부합니다. 마운트된 PVC를 사용하여 예약된 모든 워크로드(클러스터 노드가 정상 상태이고 준비된 후에도)는 Trident가 노드 `clean`(새로운 게시를 위한 안전한 상태)를 검증할 때까지 허용되지 않습니다.
+
+
+
+노드 상태가 복구되고 오염이 제거되면 Trident는 다음과 같이 동작합니다.
+
+. 노드에서 더 이상 사용되지 않는 게시된 경로를 식별하고 정리합니다.
+. 노드가 `cleanable`상태(서비스 중단 오류 표시가 제거되고 노드가 `Ready`상태인 경우)이고 모든 오래된 게시 경로가 정리되면 Trident는 해당 노드를 `clean`로 다시 승인하고 해당 노드에 새 게시 볼륨을 허용합니다.
+
+
+
+
+== 자동 페일오버에 대한 세부 정보
+
+link:https://github.com/medik8s/node-healthcheck-operator["노드 상태 점검(NHC) 운영자"^]와의 통합을 통해 강제 분리 프로세스를 자동화할 수 있습니다. 노드 장애가 발생하면 NHC는 Trident 노드 복구(TNR)를 트리거하고 장애가 발생한 노드를 정의하는 TridentNodeRemediation CR을 Trident 네임스페이스에 생성하여 자동으로 강제 분리를 수행합니다. TNR은 노드 장애 발생 시에만 생성되며, 노드가 다시 온라인 상태가 되거나 삭제되면 NHC에서 제거됩니다.
+
+
+
+=== 실패한 노드 Pod 제거 프로세스
+
+자동 장애 조치는 장애가 발생한 노드에서 제거할 워크로드를 선택합니다. TNR이 생성되면 TNR 컨트롤러는 해당 노드를 비정상 상태로 표시하여 새로운 볼륨 게시를 방지하고, 강제 분리가 지원되는 Pod와 해당 Pod의 볼륨 연결을 제거하기 시작합니다.
+
+강제 분리에서 지원하는 모든 볼륨/PVC는 자동 페일오버에서 지원됩니다.
+
+* 자동 내보내기 정책을 사용하는 NAS 및 NAS-economy 볼륨(SMB는 아직 지원되지 않음)
+* SAN 및 SAN-economy 볼륨.
+
+
+다음을 참조하십시오. <<강제 분리에 대한 세부 정보>>.
+
+*기본 동작*:
+
+* force-detach에서 지원하는 볼륨을 사용하는 Pod는 장애가 발생한 노드에서 제거됩니다. Kubernetes는 이러한 Pod를 정상 노드로 다시 스케줄링합니다.
+* 강제 분리 기능을 지원하지 않는 볼륨(Trident 이외의 볼륨 포함)을 사용하는 Pod는 장애가 발생한 노드에서 제거되지 않습니다.
+* 스테이트리스 파드(PVC 제외)는 파드 어노테이션 `trident.netapp.io/podRemediationPolicy: delete`이 설정되어 있지 않으면 장애가 발생한 노드에서 제거되지 않습니다.
+
+
+*Pod 제거 동작 재정의*:
+
+Pod 제거 동작은 Pod 어노테이션을 사용하여 사용자 지정할 수 있습니다 `trident.netapp.io/podRemediationPolicy[retain, delete]`. 이러한 어노테이션은 페일오버 발생 시 검사되고 사용됩니다. 페일오버 후 어노테이션이 사라지지 않도록 하려면 Kubernetes 배포/복제 세트 Pod 사양에 어노테이션을 적용하세요:
+
+* `retain` - 자동 장애 조치 중에 Pod는 장애가 발생한 노드에서 제거되지 않습니다.
+* `delete` - 자동 장애 조치 중에 Pod는 장애가 발생한 노드에서 제거됩니다.
+
+
+이러한 주석은 모든 포드에 적용할 수 있습니다.
+
+[WARNING]
+====
+* 강제 분리를 지원하는 볼륨의 경우 장애가 발생한 노드에서만 I/O 작업이 차단됩니다.
+* 강제 분리를 지원하지 않는 볼륨의 경우 데이터 손상 및 다중 연결 문제가 발생할 위험이 있습니다.
+
+
+====
+
+
+=== TridentNodeRemediation CR
+
+TridentNodeRemediation(TNR) CR은 장애가 발생한 노드를 정의합니다. TNR의 이름은 장애가 발생한 노드의 이름입니다.
+
+*TNR 예*:
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentNodeRemediation
+metadata:
+  name: <K8s-node-name>
+spec: {}
+----
+*TNR 상태*: 다음 명령을 사용하여 TNR 상태를 확인합니다.
+`kubectl get tnr <name> -n <trident-namespace>`
+
+TNR은 다음 상태 중 하나에 있을 수 있습니다.
+
+* _복구 중_:
++
+** 해당 노드에 마운트된 force-detach에서 지원하는 볼륨에 대한 백엔드 I/O 액세스를 중지합니다.
+** Trident 노드 객체가 더티(새 게시에 안전하지 않음)로 표시됩니다.
+** 노드에서 Pod 및 볼륨 연결을 제거합니다
+
+
+* _NodeRecoveryPending_:
++
+** 컨트롤러가 노드가 다시 온라인 상태가 되기를 기다리고 있습니다.
+** 노드가 온라인 상태가 되면 publish-enforcement를 통해 노드가 깨끗하고 새로운 볼륨 게시를 위한 준비가 완료되었는지 확인합니다.
+
+
+* 노드가 K8s에서 삭제되면 TNR 컨트롤러는 TNR을 제거하고 조정 작업을 중지합니다.
+* _성공_:
++
+** 모든 복구 및 노드 복구 단계가 성공적으로 완료되었습니다. 노드가 정상이며 새 볼륨 게시 준비가 되었습니다.
+
+
+* _실패_:
++
+** 복구 불가능한 오류입니다. 오류 원인은 CR의 status.message 필드에 설정되어 있습니다.
+
+
+
+
+
+
+=== 자동 페일오버 활성화
+
+*사전 요구 사항*:
+
+* 자동 장애 조치를 활성화하기 전에 강제 분리가 활성화되어 있는지 확인하십시오. 자세한 내용은 <<강제 분리에 대한 세부 정보>>을 참조하십시오.
+* Kubernetes 클러스터에 노드 상태 확인(NHC)을 설치합니다.
++
+** link:https://sdk.operatorframework.io/docs/installation/["operator-sdk 설치"].
+** 클러스터에 Operator Lifecycle Manager(OLM)가 설치되어 있지 않은 경우 설치하십시오 `operator-sdk olm install`.
+** Node Health check Operator를 설치합니다 `kubectl create -f https://operatorhub.io/install/node-healthcheck-operator.yaml`.
+
+
+
+
+
+NOTE: 아래 <<Integrating Custom Node Health Check Solutions>> 섹션에 명시된 대로 노드 장애를 감지하는 다른 방법을 사용할 수도 있습니다.
+
+자세한 내용은 link:https://www.redhat.com/en/blog/node-health-check-operator["노드 상태 점검 오퍼레이터"^]을 참조하십시오.
+
+.단계
+. 클러스터의 워커 노드를 모니터링하기 위해 Trident 네임스페이스에 NodeHealthCheck(NHC) CR을 생성합니다. 예:
++
+[source, yaml]
+----
+apiVersion: remediation.medik8s.io/v1alpha1
+kind: NodeHealthCheck
+metadata:
+  name: <CR name>
+spec:
+  selector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+      - key: node-role.kubernetes.io/master
+        operator: DoesNotExist
+  remediationTemplate:
+    apiVersion: trident.netapp.io/v1
+    kind: TridentNodeRemediationTemplate
+    namespace: <Trident installation namespace>
+    name: trident-node-remediation-template
+  minHealthy: 0 # Trigger force-detach upon one or more node failures
+  unhealthyConditions:
+    - type: Ready
+      status: "False"
+      duration: 0s
+    - type: Ready
+      status: Unknown
+      duration: 0s
+----
+.  `trident` 네임스페이스에 노드 상태 점검 CR을 적용합니다.
++
+`kubectl apply -f <nhc-cr-file>.yaml -n <trident-namespace>`
+
+
+
+위의 CR은 노드 조건 Ready: false 및 Unknown에 대해 K8s 워커 노드를 감시하도록 구성되어 있습니다. 노드가 Ready: false 또는 Ready: Unknown 상태가 되면 Automated-Failover가 트리거됩니다.
+
+CR의 `unhealthyConditions`는 0초 유예 기간을 사용합니다. 이로 인해 K8s가 노드에서 하트비트를 수신하지 못한 후 노드 조건을 Ready: false로 설정하면 즉시 자동 페일오버가 트리거됩니다. K8s는 기본적으로 마지막 하트비트 후 40초를 대기한 후 Ready: false로 설정합니다. 이 유예 기간은 K8s 배포 옵션에서 사용자 지정할 수 있습니다.
+
+추가 구성 옵션은 link:https://github.com/medik8s/node-healthcheck-operator/blob/main/docs/configuration.md["Node-Healthcheck-Operator 문서"^]을 참조하십시오.
+
+
+
+=== 추가 설정 정보
+
+Trident가 강제 분리 기능을 활성화하여 설치되면 NHC와의 통합을 용이하게 하기 위해 Trident 네임스페이스에 두 개의 추가 리소스가 자동으로 생성됩니다: TridentNodeRemediationTemplate(TNRT) 및 ClusterRole.
+
+*TridentNodeRemediationTemplate(TNRT)*:
+
+TNRT는 NHC 컨트롤러의 템플릿 역할을 하며, TNRT를 사용하여 필요에 따라 TNR 리소스를 생성합니다.
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentNodeRemediationTemplate
+metadata:
+  name: trident-node-remediation-template
+  namespace: trident
+spec:
+  template:
+    spec: {}
+----
+*ClusterRole*:
+
+force-detach가 활성화되면 설치 중에 클러스터 역할이 추가됩니다. 이를 통해 NHC는 Trident 네임스페이스의 TNR에 대한 권한을 갖게 됩니다.
+
+[source, yaml]
+----
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.ext-remediation/aggregate-to-ext-remediation: "true"
+  name: tridentnoderemediation-access
+rules:
+- apiGroups:
+  - trident.netapp.io
+  resources:
+  - tridentnoderemediationtemplates
+  - tridentnoderemediations
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+----
+
+
+=== K8s 클러스터 업그레이드 및 유지 관리
+
+장애 조치를 방지하려면 노드가 다운되거나 재부팅될 것으로 예상되는 K8s 유지 관리 또는 업그레이드 중에 자동 장애 조치를 일시 중지하십시오. 위에서 설명한 NHC CR을 일시 중지하려면 해당 CR에 패치를 적용하면 됩니다.
+
+`kubectl patch NodeHealthCheck <cr-name> --patch '{"spec":{"pauseRequests":["<description-for-reason-of-pause>"]}}' --type=merge`
+
+이렇게 하면 자동 장애 조치가 일시 중지됩니다. 자동 장애 조치를 다시 활성화하려면 유지 관리가 완료된 후 사양에서 pauseRequests를 제거하십시오.
+
+
+
+=== 제한 사항
+
+* I/O 작업은 force-detach에서 지원하는 볼륨에 대해 장애가 발생한 노드에서만 차단됩니다. force-detach에서 지원하는 볼륨/PVC를 사용하는 Pod만 자동으로 제거됩니다.
+* 자동 페일오버 및 강제 분리 기능은 trident-controller pod 내부에서 실행됩니다. trident-controller를 호스팅하는 노드에 장애가 발생하면 K8s가 pod를 정상 노드로 이동할 때까지 자동 페일오버가 지연됩니다.
+
+
+
+
+=== 사용자 정의 노드 상태 확인 솔루션 통합
+
+Node Healthcheck Operator를 대체 노드 장애 감지 도구로 교체하여 자동 장애 조치를 트리거할 수 있습니다. 자동 장애 조치 메커니즘과의 호환성을 보장하려면 사용자 지정 솔루션은 다음을 수행해야 합니다.
+
+* 노드 장애가 감지되면 장애가 발생한 노드의 이름을 TNR CR 이름으로 사용하여 TNR을 생성합니다.
+* 노드가 복구되고 TNR이 Succeeded 상태일 때 TNR을 삭제합니다.
+

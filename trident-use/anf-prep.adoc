@@ -1,0 +1,122 @@
+---
+sidebar: sidebar 
+permalink: trident-use/anf-prep.html 
+keywords: trident backend, azure netapp files, smb volumes, smb, windows, active directory, csi proxy, aks, managed identities 
+summary: Azure NetApp Files 백엔드를 구성하기 전에 다음 요구 사항을 충족해야 합니다. 
+---
+= Azure NetApp Files 백엔드 구성을 준비하세요
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Azure NetApp Files 백엔드를 구성하기 전에 다음 요구 사항을 충족해야 합니다.
+
+
+
+== 지원되는 Azure 클라우드 환경
+
+Trident는 다양한 Azure 클라우드 환경에서 Azure NetApp Files 백엔드를 지원합니다.
+
+지원되는 Azure 클라우드는 다음과 같습니다.
+
+* Azure Commercial
+* Azure Government(Azure Government/MAG)
+
+
+환경을 준비할 때 Azure 구독, ID 구성 및 Azure NetApp Files 리소스가 적절한 Azure 클라우드 환경에 생성되었는지 확인하십시오.
+
+
+
+== NFS 및 SMB 볼륨의 사전 요구 사항
+
+Azure NetApp Files를 처음 사용하거나 새 위치에서 사용하는 경우 Azure NetApp Files를 설정하고 NFS 볼륨을 생성하기 위해 몇 가지 초기 구성이 필요합니다. 을 참조하십시오. https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-quickstart-set-up-account-create-volumes["Azure: Azure NetApp Files 설정 및 NFS 볼륨 생성"^]
+
+ https://azure.microsoft.com/en-us/products/netapp/["Azure NetApp Files"^] 백엔드를 구성하고 사용하려면 다음이 필요합니다.
+
+[NOTE]
+====
+* `subscriptionID`,  `tenantID`,  `clientID`,  `location` 및  `clientSecret`는 AKS 클러스터에서 관리 ID를 사용할 때 선택 사항입니다.
+* `tenantID`,  `clientID` 및  `clientSecret`는 AKS 클러스터에서 클라우드 ID를 사용할 때 선택 사항입니다.
+* 비상업용 Azure 클라우드에 Azure NetApp Files를 배포하려면 클라우드별 Azure Resource Manager 및 인증 엔드포인트가 필요합니다. Trident와 모든 백엔드 구성이 Azure 클라우드 환경에 적합한 엔드포인트를 사용하는지 확인하십시오.
+
+
+====
+* 용량 풀. 다음을 참조하십시오. link:https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-set-up-capacity-pool["Microsoft: Azure NetApp Files용 용량 풀 생성"^].
+* Azure NetApp Files에 위임된 서브넷입니다. 다음을 참조하십시오. link:https://learn.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet["Microsoft: Azure NetApp Files에 서브넷 위임"^].
+* `subscriptionID`Azure NetApp Files가 활성화된 Azure 구독에서 가져온 것입니다.
+* `tenantID`, `clientID` 및 `clientSecret`는 Azure NetApp Files 서비스에 대한 충분한 권한이 있는 Azure Active Directory의 link:https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal["앱 등록"^]에서 가져와야 합니다. 앱 등록은 다음 중 하나를 사용해야 합니다.
++
+** 소유자 또는 기여자 역할link:https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles["Azure에서 미리 정의됨"^].
+** 구독 수준에서 link:https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal["사용자 지정 Contributor 역할"](`assignableScopes`Trident에 필요한 권한으로만 제한된 다음 권한을 가진 사용자 지정 역할입니다. 사용자 지정 역할을 생성한 후 link:https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal["Azure 포털을 사용하여 역할을 할당합니다"^].
++
+.사용자 지정 기여자 역할
+[%collapsible]
+====
+[source, JSON]
+----
+{
+  "id": "/subscriptions/<subscription-id>/providers/Microsoft.Authorization/roleDefinitions/<role-definition-id>",
+  "properties": {
+    "roleName": "custom-role-with-limited-perms",
+    "description": "custom role providing limited permissions",
+    "assignableScopes": [
+      "/subscriptions/<subscription-id>"
+    ],
+    "permissions": [
+      {
+        "actions": [
+          "Microsoft.NetApp/netAppAccounts/capacityPools/read",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/write",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/read",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/write",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/delete",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots/read",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots/write",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/snapshots/delete",
+          "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/MountTargets/read",
+          "Microsoft.Network/virtualNetworks/read",
+          "Microsoft.Network/virtualNetworks/subnets/read",
+          "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations/read",
+          "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations/write",
+          "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations/delete",
+          "Microsoft.Features/features/read",
+          "Microsoft.Features/operations/read",
+          "Microsoft.Features/providers/features/read",
+          "Microsoft.Features/providers/features/register/action",
+          "Microsoft.Features/providers/features/unregister/action",
+          "Microsoft.Features/subscriptionFeatureRegistrations/read"
+        ],
+        "notActions": [],
+        "dataActions": [],
+        "notDataActions": []
+      }
+    ]
+  }
+}
+----
+====
+
+
+*  `location`하나 이상의 https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-delegate-subnet["위임된 서브넷"^]를 포함하는 Azure입니다. Trident 22.01부터 `location` 매개 변수는 백엔드 구성 파일의 최상위 수준에서 필수 필드입니다. 가상 풀에 지정된 위치 값은 무시됩니다.
+*  `Cloud Identity`를 사용하려면,  `client ID`를  https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-manage-user-assigned-managed-identities["사용자 할당 관리 ID"^]에서 가져와서 해당 ID를  `azure.workload.identity/client-id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx`에 지정하십시오.
+
+
+
+
+== SMB 볼륨에 대한 추가 요구 사항
+
+SMB 볼륨을 생성하려면 다음이 필요합니다.
+
+* Active Directory가 구성되어 Azure NetApp Files에 연결되었습니다. 다음을 참조하십시오. link:https://learn.microsoft.com/en-us/azure/azure-netapp-files/create-active-directory-connections["Microsoft: Azure NetApp Files용 Active Directory 연결 생성 및 관리"^].
+* Linux 컨트롤러 노드와 Windows Server 2022를 실행하는 하나 이상의 Windows 워커 노드로 구성된 Kubernetes 클러스터입니다. Trident는 Windows 노드에서 실행되는 Pod에 마운트된 SMB 볼륨만 지원합니다.
+* Azure NetApp Files가 Active Directory에 인증할 수 있도록 Active Directory 자격 증명이 포함된 Trident 암호를 하나 이상 생성해야 합니다. 비밀 키를 생성하려면 `smbcreds`:
++
+[listing]
+----
+kubectl create secret generic smbcreds --from-literal username=user --from-literal password='password'
+----
+* Windows 서비스로 구성된 CSI 프록시입니다.  `csi-proxy`를 구성하려면 Windows에서 실행되는 Kubernetes 노드에 대한 link:https://github.com/kubernetes-csi/csi-proxy["GitHub: CSI 프록시"^] 또는 link:https://github.com/Azure/aks-engine/blob/master/docs/topics/csi-proxy-windows.md["GitHub: Windows용 CSI 프록시"^]를 참조하십시오.
+

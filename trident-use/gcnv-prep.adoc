@@ -1,0 +1,32 @@
+---
+sidebar: sidebar 
+permalink: trident-use/gcnv-prep.html 
+keywords: trident backend, google cloud netapp volumes, smb volumes, active directory, csi proxy, aks, cloud identity 
+summary: Google Cloud NetApp Volumes 백엔드를 구성하기 전에 다음 요구 사항을 충족해야 합니다. 
+---
+= Google Cloud NetApp Volumes 백엔드 구성을 준비하세요
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Google Cloud NetApp Volumes 백엔드를 구성하기 전에 다음 요구 사항을 충족해야 합니다.
+
+
+
+== NFS 또는 SMB 볼륨의 사전 요구 사항
+
+Google Cloud NetApp Volumes를 처음 사용하거나 새 위치에서 사용하는 경우 Google Cloud NetApp Volumes를 설정하고 NFS 또는 SMB 볼륨을 생성하려면 몇 가지 초기 구성이 필요합니다. 다음을 참조하십시오. link:https://cloud.google.com/netapp/volumes/docs/before-you-begin/application-resilience["시작하기 전에"^].
+
+Google Cloud NetApp Volumes 백엔드를 구성하기 전에 다음 사항을 확인하십시오.
+
+* Google Cloud NetApp Volumes 서비스로 구성된 Google Cloud 계정. 다음을 참조하십시오. link:https://cloud.google.com/netapp-volumes["Google Cloud NetApp Volumes"^].
+* Google Cloud 계정의 프로젝트 번호입니다. 다음을 참조하십시오. link:https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects["프로젝트 식별"^].
+* NetApp Volumes Admin (`roles/netapp.admin` 역할을 가진 Google Cloud 서비스 계정 다음을 참조하십시오. link:https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/iam#roles_and_permissions["Identity and Access Management 역할 및 권한"^].
+* GCNV 계정용 API 키 파일입니다. 다음을 참조하십시오. link:https://cloud.google.com/iam/docs/keys-create-delete#creating["서비스 계정 키 생성"^]
+* 스토리지 풀. 다음을 참조하십시오. link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/storage-pools/overview["스토리지 풀 개요"^].
+
+
+Google Cloud NetApp Volumes에 대한 액세스 설정 방법에 대한 자세한 내용은 link:https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/workflow#before_you_begin["Google Cloud NetApp Volumes에 대한 액세스 설정"^]을 참조하십시오.

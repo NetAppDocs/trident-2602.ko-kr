@@ -1,0 +1,70 @@
+---
+indexpage:
+  title: Trident 26.02 문서
+  summary: Trident는 NetApp에서 관리하는 오픈 소스 스토리지 프로비저너 및 오케스트레이터입니다. Docker 및 Kubernetes에서
+    관리되는 컨테이너화된 애플리케이션을 위한 스토리지 볼륨을 생성할 수 있습니다.
+  keywords: trident, 2602, documentation, release notes, get started, deploy, upgrade,
+    use, data management, protection, demos, tutorials, blogs, community
+  lead: Trident는 NetApp에서 관리하는 오픈 소스 스토리지 프로비저너 및 오케스트레이터입니다. Docker 및 Kubernetes에서
+    관리되는 컨테이너화된 애플리케이션을 위한 스토리지 볼륨을 생성할 수 있습니다.
+  tiles:
+  - title: 릴리스 노트
+    links:
+    - title: 새로운 기능
+      url: trident-rn.html
+    - title: 이전 버전
+      url: "/earlier-versions.html"
+    - title: Trident ASA r2 스토리지 시스템 지원
+      url: "/trident-asar2-support.html"
+  - title: 시작하기
+    links:
+    - title: Trident에 대해 알아보십시오
+      url: "/trident-get-started/intro.html"
+    - title: 요구 사항
+      url: "/trident-get-started/requirements.html"
+    - title: 빠른 시작
+      url: "/trident-get-started/quickstart.html"
+  - title: Trident 구축
+    links:
+    - title: Trident 운영자를 사용하여 배포하세요
+      url: "/trident-install/kubernetes-deploy-operator.html"
+    - title: tridentctl을 사용하여 배포합니다
+      url: "/trident-install/kubernetes-deploy-tridentctl.html"
+    - title: Docker용 Trident 배포
+      url: "/trident-docker/deploy-docker.html"
+  - title: Trident 업그레이드
+    links:
+    - title: Trident 운영자로 업그레이드
+      url: "/trident-managing-k8s/upgrade-operator.html"
+    - title: tridentctl로 업그레이드합니다
+      url: "/trident-managing-k8s/upgrade-tridentctl.html"
+  - title: Trident 사용
+    links:
+    - title: 작업자 노드를 준비합니다
+      url: "/trident-use/worker-node-prep.html"
+    - title: 백엔드 구성
+      url: "/trident-use/backends.html"
+    - title: 스토리지 클래스 관리
+      url: "/trident-use/manage-stor-class.html"
+    - title: 볼륨 작업을 수행합니다
+      url: "/trident-use/vol-operations.html"
+  - title: 고급 데이터 관리 및 보호
+    links:
+    - title: Trident Protect를 통한 고급 데이터 보호
+      url: "/trident-protect/learn-about-trident-protect.html"
+    - title: Trident Protect 배포
+      url: "/trident-protect/trident-protect-installation.html"
+    - title: Trident Protect 업그레이드
+      url: "/trident-protect/trident-protect-upgrade.html"
+  - title: 데모 및 튜토리얼
+    links:
+    - title: Trident 비디오
+      url: https://media.netapp.com/video-detail/c5bebae0-aab6-5fed-ae16-df6a3a8b260d/netapp-trident-advanced-data-protection-for-kubernetes-applications
+  - title: 블로그 및 커뮤니티
+    links:
+    - title: Trident 및 Trident Protect 블로그
+      url: "/blog-posts.html"
+    - title: NetApp.io
+      url: https://netapp.io/
+    - title: Discord
+      url: https://discord.gg/NetApp

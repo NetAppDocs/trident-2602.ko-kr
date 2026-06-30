@@ -1,0 +1,174 @@
+---
+sidebar: sidebar 
+permalink: trident-use/volume-share.html 
+keywords: volref, volume reference, share, pvc, pv, nfs, namespace, cvna, cross-namespace, sharing 
+summary: Trident를 사용하면 기본 네임스페이스에 볼륨을 생성하고 하나 이상의 보조 네임스페이스에서 공유할 수 있습니다. 
+---
+= 네임스페이스 간에 NFS 볼륨 공유
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident를 사용하면 기본 네임스페이스에 볼륨을 생성하고 하나 이상의 보조 네임스페이스에서 공유할 수 있습니다.
+
+
+
+== 기능
+
+TridentVolumeReference CR을 사용하면 하나 이상의 Kubernetes 네임스페이스에서 ReadWriteMany(RWX) NFS 볼륨을 안전하게 공유할 수 있습니다. 이 Kubernetes 네이티브 솔루션은 다음과 같은 이점을 제공합니다.
+
+* 보안을 보장하기 위한 여러 수준의 액세스 제어
+* 모든 Trident NFS 볼륨 드라이버와 호환됩니다.
+* tridentctl 또는 기타 비네이티브 Kubernetes 기능에 의존하지 않음
+
+
+이 다이어그램은 두 Kubernetes 네임스페이스에서 NFS 볼륨 공유를 보여줍니다.
+
+image::cross-namespace-sharing.png[네임스페이스 간 공유에 대한 개념도]
+
+
+
+== 빠른 시작
+
+몇 단계만 거치면 NFS 볼륨 공유를 설정할 수 있습니다.
+
+.image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-1.png["하나"] 소스 PVC를 구성하여 볼륨을 공유합니다
+[role="quick-margin-para"]
+소스 네임스페이스 소유자는 소스 PVC의 데이터에 액세스할 수 있는 권한을 부여합니다.
+
+.image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-2.png["둘"] 대상 네임스페이스에 CR을 생성할 수 있는 권한을 부여하십시오
+[role="quick-margin-para"]
+클러스터 관리자는 대상 네임스페이스 소유자에게 TridentVolumeReference CR을 생성할 수 있는 권한을 부여합니다.
+
+.image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-3.png["3"] 대상 네임스페이스에 TridentVolumeReference를 생성합니다
+[role="quick-margin-para"]
+대상 네임스페이스의 소유자는 소스 PVC를 참조하기 위해 TridentVolumeReference CR을 생성합니다.
+
+.image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-4.png["네"] 대상 네임스페이스에 하위 PVC를 생성합니다
+[role="quick-margin-para"]
+대상 네임스페이스의 소유자는 소스 PVC의 데이터 소스를 사용하기 위해 하위 PVC를 생성합니다.
+
+
+
+== 소스 및 대상 네임스페이스를 구성합니다
+
+보안을 보장하기 위해 네임스페이스 간 공유는 소스 네임스페이스 소유자, 클러스터 관리자 및 대상 네임스페이스 소유자의 협업과 조치가 필요합니다. 각 단계에서 사용자 역할이 지정됩니다.
+
+.단계
+. *소스 네임스페이스 소유자:* 소스 네임스페이스에서 PVC (`pvc1`를 생성하여 대상 네임스페이스와 공유할 수 있는 권한을 부여합니다 (`namespace2`. 이때  `shareToNamespace` 주석을 사용합니다.
++
+[source, yaml]
+----
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc1
+  namespace: namespace1
+  annotations:
+    trident.netapp.io/shareToNamespace: namespace2
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: trident-csi
+  resources:
+    requests:
+      storage: 100Gi
+----
++
+Trident는 PV와 해당 백엔드 NFS 스토리지 볼륨을 생성합니다.
+
++
+[NOTE]
+====
+** 쉼표로 구분된 목록을 사용하여 여러 네임스페이스에서 PVC를 공유할 수 있습니다. 예를 들어 `trident.netapp.io/shareToNamespace: namespace2,namespace3,namespace4`.
+**  `*`를 사용하여 모든 네임스페이스에 공유할 수 있습니다. 예를 들어 `trident.netapp.io/shareToNamespace: *`
+** 언제든지 PVC를 업데이트하여 `shareToNamespace` 주석을 포함시킬 수 있습니다.
+
+
+====
+. *클러스터 관리자:* 대상 네임스페이스 소유자가 대상 네임스페이스에 TridentVolumeReference CR을 생성할 수 있도록 적절한 RBAC가 설정되어 있는지 확인하십시오.
+. *대상 네임스페이스 소유자:* 대상 네임스페이스에 소스 네임스페이스를 참조하는 TridentVolumeReference CR을 생성합니다 `pvc1`.
++
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentVolumeReference
+metadata:
+  name: my-first-tvr
+  namespace: namespace2
+spec:
+  pvcName: pvc1
+  pvcNamespace: namespace1
+----
+. *대상 네임스페이스 소유자:* 대상 네임스페이스 (`namespace2`)에서 PVC (`pvc2`)를 생성하고, 소스 PVC를 지정하기 위해  `shareFromPVC` 주석을 사용합니다.
++
+[source, yaml]
+----
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  annotations:
+    trident.netapp.io/shareFromPVC: namespace1/pvc1
+  name: pvc2
+  namespace: namespace2
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: trident-csi
+  resources:
+    requests:
+      storage: 100Gi
+----
++
+
+NOTE: 대상 PVC의 크기는 소스 PVC보다 작거나 같아야 합니다.
+
+
+
+.결과
+Trident는 대상 PVC의 `shareFromPVC` 어노테이션을 읽고 소스 PV를 가리키고 소스 PV 스토리지 리소스를 공유하는 자체 스토리지 리소스가 없는 하위 볼륨으로 대상 PV를 생성합니다. 대상 PVC와 PV는 정상적으로 바인딩된 것처럼 보입니다.
+
+
+
+== 공유 볼륨 삭제
+
+여러 네임스페이스에서 공유되는 볼륨을 삭제할 수 있습니다. Trident는 소스 네임스페이스에서 해당 볼륨에 대한 액세스를 제거하고 볼륨을 공유하는 다른 네임스페이스에 대한 액세스는 유지합니다. 볼륨을 참조하는 모든 네임스페이스가 제거되면 Trident는 해당 볼륨을 삭제합니다.
+
+
+
+==  `tridentctl get`를 사용하여 하위 볼륨을 쿼리합니다
+
+이 [`tridentctl` 유틸리티를 사용하면  `get` 명령을 실행하여 하위 볼륨을 가져올 수 있습니다. 자세한 내용은 link:../trident-reference/trident-cl.html[`tridentctl` 명령 및 옵션]을 참조하십시오.
+
+[listing]
+----
+Usage:
+  tridentctl get [option]
+----
+플래그:
+
+* ``-h, --help`: 볼륨에 대한 도움말입니다.
+* `--parentOfSubordinate string`: 쿼리를 하위 소스 볼륨으로 제한합니다.
+* `--subordinateOf string`: 볼륨의 하위 항목으로 쿼리를 제한합니다.
+
+
+
+
+== 제한 사항
+
+* Trident는 대상 네임스페이스가 공유 볼륨에 쓰기 작업을 하는 것을 막을 수 없습니다. 공유 볼륨 데이터가 덮어쓰이는 것을 방지하려면 파일 잠금 또는 다른 프로세스를 사용해야 합니다.
+*  `shareToNamespace` 또는  `shareFromNamespace` 어노테이션을 제거하거나  `TridentVolumeReference` CR을 삭제해도 소스 PVC에 대한 액세스 권한을 취소할 수 없습니다. 액세스 권한을 취소하려면 하위 PVC를 삭제해야 합니다.
+* 하위 볼륨에서는 스냅샷, 클론 및 미러링이 불가능합니다.
+
+
+
+
+== 자세한 내용은
+
+교차 네임스페이스 볼륨 액세스에 대한 자세한 내용은 다음을 참조하십시오.
+
+* link:https://media.netapp.com/page/9071d19d-1438-5ed3-a7aa-ea4d73c28b7f/solutions-products["NetAppTV"^]에서 데모를 시청하십시오.
+

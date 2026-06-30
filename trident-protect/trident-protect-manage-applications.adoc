@@ -1,0 +1,217 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-manage-applications.html 
+keywords: appvault, data protection, custom resource, namespace, application, cluster 
+summary: Trident Protect에서 관리하려는 애플리케이션을 인식하도록 하려면 애플리케이션 CR과 해당 AppVault CR을 생성하면 됩니다. 
+---
+= Trident Protect를 사용하여 관리용 애플리케이션 정의
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident Protect로 관리할 애플리케이션을 정의하려면 애플리케이션 CR과 연결된 AppVault CR을 생성하면 됩니다.
+
+
+
+== AppVault CR 생성
+
+애플리케이션에 대한 데이터 보호 작업을 수행할 때 사용할 AppVault CR을 생성해야 하며, AppVault CR은 Trident Protect가 설치된 클러스터에 있어야 합니다. AppVault CR은 사용 환경에 따라 다릅니다. AppVault CR의 예는 link:trident-protect-appvault-custom-resources.html["AppVault 사용자 지정 리소스."]을 참조하십시오.
+
+
+
+== 애플리케이션 정의
+
+Trident Protect로 관리할 각 애플리케이션을 정의해야 합니다. 애플리케이션 CR을 수동으로 생성하거나 Trident Protect CLI를 사용하여 관리할 애플리케이션을 정의할 수 있습니다.
+
+[role="tabbed-block"]
+====
+.CR을 사용하여 애플리케이션 추가
+--
+.단계
+. 타겟 애플리케이션 CR 파일을 생성합니다.
++
+.. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `maria-app.yaml`).
+.. 다음 속성을 구성하십시오.
++
+*** *metadata.name*: (_필수_) 애플리케이션 사용자 지정 리소스의 이름입니다. 보호 작업에 필요한 다른 CR 파일에서 이 값을 참조하므로 선택한 이름을 기억해 두십시오.
+*** *spec.includedNamespaces*: (_필수_) 네임스페이스 및 레이블 선택기를 사용하여 애플리케이션에서 사용하는 네임스페이스와 리소스를 지정합니다. 애플리케이션 네임스페이스는 이 목록에 반드시 포함되어야 합니다. 레이블 선택기는 선택 사항이며, 지정된 각 네임스페이스 내의 리소스를 필터링하는 데 사용할 수 있습니다.
+*** *spec.includedClusterScopedResources*: (_선택 사항_) 이 속성을 사용하여 애플리케이션 정의에 포함할 클러스터 범위 리소스를 지정합니다. 이 속성을 사용하면 그룹, 버전, 종류 및 레이블을 기준으로 이러한 리소스를 선택할 수 있습니다.
++
+**** *groupVersionKind*: (_필수_) 클러스터 범위 리소스의 API 그룹, 버전 및 종류를 지정합니다.
+**** *labelSelector*: (_선택 사항_) 레이블을 기준으로 클러스터 범위 리소스를 필터링합니다.
+
+
+*** *metadata.annotations.protect.trident.netapp.io/skip-vm-freeze*: (_선택 사항_) 이 어노테이션은 KubeVirt 환경과 같이 스냅샷 전에 파일 시스템이 동결되는 가상 머신에서 정의된 애플리케이션에만 적용됩니다. 이 애플리케이션이 스냅샷 중에 파일 시스템에 쓸 수 있는지 여부를 지정합니다. true로 설정하면 애플리케이션은 전역 설정을 무시하고 스냅샷 중에 파일 시스템에 쓸 수 있습니다. false로 설정하면 애플리케이션은 전역 설정을 무시하고 스냅샷 중에 파일 시스템이 동결됩니다. 지정되었지만 애플리케이션 정의에 가상 머신이 없는 경우 어노테이션은 무시됩니다. 지정하지 않으면 애플리케이션은 link:trident-protect-requirements.html#protecting-data-with-kubevirt-vms["글로벌 Trident Protect 동결 설정"]를 따릅니다.
++
+[NOTE]
+====
+애플리케이션이 이미 생성된 후에 이 주석을 적용해야 하는 경우 다음 명령을 사용할 수 있습니다.
+
+[source, console]
+----
+kubectl annotate application -n <application CR namespace> <application CR name> protect.trident.netapp.io/skip-vm-freeze="true"
+----
+====
++
+YAML 예:
+
++
+[source, yaml]
+----
+apiVersion: protect.trident.netapp.io/v1
+kind: Application
+metadata:
+  annotations:
+    protect.trident.netapp.io/skip-vm-freeze: "false"
+  name: my-app-name
+  namespace: my-app-namespace
+spec:
+  includedNamespaces:
+    - namespace: namespace-1
+      labelSelector:
+        matchLabels:
+          app: example-app
+    - namespace: namespace-2
+      labelSelector:
+        matchLabels:
+          app: another-example-app
+  includedClusterScopedResources:
+    - groupVersionKind:
+        group: rbac.authorization.k8s.io
+        kind: ClusterRole
+        version: v1
+      labelSelector:
+        matchLabels:
+          mylabel: test
+
+----
+
+
+
+
+. (_선택 사항_) 필요한 경우 동일한 CR에 리소스 필터링을 추가하여 특정 리소스를 포함하거나 제외할 수 있습니다.
++
+** *일반 필터 예:*
++
+*** *resourceFilter.resourceSelectionCriteria*: (필터링에 필수)  `Include` 또는  `Exclude`를 사용하여 resourceMatchers에 정의된 리소스를 포함하거나 제외합니다. 포함 또는 제외할 리소스를 정의하려면 다음 resourceMatchers 매개변수를 추가하십시오.
++
+**** *resourceFilter.resourceMatchers*: resourceMatcher 객체의 배열입니다. 이 배열에 여러 요소를 정의하는 경우, 요소들은 OR 연산으로 일치하며, 각 요소 내부의 필드(그룹, 종류, 버전)는 AND 연산으로 일치합니다.
+**** *resourceMatchers[].group*: (_선택 사항_) 필터링할 리소스의 그룹입니다.
+**** *resourceMatchers[].kind*: (_선택 사항_) 필터링할 리소스의 종류입니다.
+**** *resourceMatchers[].version*: (_선택 사항_) 필터링할 리소스의 버전입니다.
+**** *resourceMatchers[].names*: (_선택 사항_) 필터링할 리소스의 Kubernetes metadata.name 필드에 있는 이름입니다.
+**** *resourceMatchers[].namespaces*: (_선택 사항_) 필터링할 리소스의 Kubernetes metadata.name 필드에 있는 네임스페이스입니다.
+**** *resourceMatchers[].labelSelectors*: (_선택 사항_)  https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors["Kubernetes 문서"^]에 정의된 리소스의 Kubernetes metadata.name 필드에 있는 레이블 선택기 문자열입니다. 예를 들면 다음과 같습니다: `"trident.netapp.io/os=linux"`.
++
+
+NOTE:  `resourceFilter`와 `labelSelector`가 모두 사용될 경우, `resourceFilter`가 먼저 실행된 다음 `labelSelector`가 결과 리소스에 적용됩니다.
+
++
+예를 들면 다음과 같습니다.
+
++
+[source, yaml]
+----
+spec:
+  resourceFilter:
+    resourceSelectionCriteria: "Include"
+    resourceMatchers:
+      - group: my-resource-group-1
+        kind: my-resource-kind-1
+        version: my-resource-version-1
+        names: ["my-resource-names"]
+        namespaces: ["my-resource-namespaces"]
+        labelSelectors: ["trident.netapp.io/os=linux"]
+      - group: my-resource-group-2
+        kind: my-resource-kind-2
+        version: my-resource-version-2
+        names: ["my-resource-names"]
+        namespaces: ["my-resource-namespaces"]
+        labelSelectors: ["trident.netapp.io/os=linux"]
+----
+
+
+
+
+** *PVC 전용 필터 예:*
++
+PVC 전용 애플리케이션을 정의하려면 리소스 필터에  `PersistentVolume`와  `VolumeSnapshotClass`도 포함해야 합니다. 스냅샷 및 백업 작업은  `PersistentVolume`(각 PVC에 바인딩된 클러스터 범위 볼륨)과  `VolumeSnapshotClass`(스냅샷 드라이버)에 따라 달라지며, 이들이 없으면 실패합니다. 예를 들면 다음과 같습니다.
+
++
+[source, yaml]
+----
+apiVersion: protect.trident.netapp.io/v1
+kind: Application
+metadata:
+  name: my-pvc-app
+  namespace: my-app-namespace
+spec:
+  includedNamespaces:
+  - namespace: my-app-namespace
+  resourceFilter:
+    resourceMatchers:
+    - kind: PersistentVolumeClaim
+      version: v1
+    - kind: PersistentVolume
+      version: v1
+    - kind: VolumeSnapshotClass
+      version: v1
+    resourceSelectionCriteria: Include
+----
+
+
+. 사용 환경에 맞는 애플리케이션 CR을 생성한 후 CR을 적용합니다. 예를 들면 다음과 같습니다.
++
+[source, console]
+----
+kubectl apply -f maria-app.yaml
+----
+
+
+--
+.CLI를 사용하여 애플리케이션 추가
+--
+.단계
+. 다음 예제 중 하나를 사용하여 애플리케이션 정의를 생성하고 적용하세요. 괄호 안의 값은 사용자 환경에 맞는 정보로 바꿔야 합니다. 예제에 표시된 인수를 쉼표로 구분한 목록을 사용하여 네임스페이스와 리소스를 애플리케이션 정의에 포함할 수 있습니다.
++
+앱을 생성할 때 스냅샷 중에 애플리케이션이 파일 시스템에 쓸 수 있는지 여부를 지정하는 어노테이션을 선택적으로 사용할 수 있습니다. 이는 KubeVirt 환경과 같이 스냅샷 전에 파일 시스템이 고정되는 가상 머신에서 정의된 애플리케이션에만 적용됩니다. 어노테이션을 `true`로 설정하면 애플리케이션은 전역 설정을 무시하고 스냅샷 중에 파일 시스템에 쓸 수 있습니다. 어노테이션을 `false`로 설정하면 애플리케이션은 전역 설정을 무시하고 스냅샷 중에 파일 시스템이 고정됩니다. 어노테이션을 사용했지만 애플리케이션 정의에 가상 머신이 없는 경우 어노테이션은 무시됩니다. 어노테이션을 사용하지 않으면 애플리케이션은 link:trident-protect-requirements.html#protecting-data-with-kubevirt-vms["글로벌 Trident Protect 동결 설정"]를 따릅니다.
+
++
+CLI를 사용하여 애플리케이션을 생성할 때 주석을 지정하려면  `--annotation` 플래그를 사용할 수 있습니다.
+
++
+** 애플리케이션을 생성하고 파일 시스템 동결 동작에 대한 글로벌 설정을 사용하십시오.
++
+[source, console]
+----
+tridentctl-protect create application <my_new_app_cr_name> --namespaces <namespaces_to_include> --csr <cluster_scoped_resources_to_include> --namespace <my-app-namespace>
+----
+** 애플리케이션을 생성하고 파일 시스템 고정 동작에 대한 로컬 애플리케이션 설정을 구성합니다.
++
+[source, console]
+----
+tridentctl-protect create application <my_new_app_cr_name> --namespaces <namespaces_to_include> --csr <cluster_scoped_resources_to_include> --namespace <my-app-namespace> --annotation protect.trident.netapp.io/skip-vm-freeze=<"true"|"false">
+----
+**  `--resource-filter-include` 및  `--resource-filter-exclude` 플래그를 사용하여 다음 예와 같이 그룹, 종류, 버전, 레이블, 이름 및 네임스페이스와 같은  `resourceSelectionCriteria`을(를) 기반으로 리소스를 포함하거나 제외할 수 있습니다.
++
+[source, console]
+----
+tridentctl-protect create application <my_new_app_cr_name> --namespaces <namespaces_to_include> --csr <cluster_scoped_resources_to_include> --namespace <my-app-namespace> --resource-filter-include '[{"Group":"apps","Kind":"Deployment","Version":"v1","Names":["my-deployment"],"Namespaces":["my-namespace"],"LabelSelectors":["app=my-app"]}]'
+----
+** PVC 전용 애플리케이션을 정의하려면 리소스 필터에  `PersistentVolume`와  `VolumeSnapshotClass``도 포함해야 합니다. 스냅샷 및 백업 작업은  `PersistentVolume`(각 PVC에 바인딩된 클러스터 범위 볼륨)과  `VolumeSnapshotClass`(스냅샷 드라이버)에 따라 달라지며, 이들이 없으면 실패합니다. 예를 들면 다음과 같습니다.
++
+[source, console]
+----
+tridentctl-protect create app my-pvc-app --namespaces <my-app-namespace> --resource-filter-include '[{"Kind":"PersistentVolumeClaim","Version":"v1"},{"Kind":"PersistentVolume","Version":"v1"},{"Kind":"VolumeSnapshotClass","Version":"v1"}]' -n <my-app-namespace>
+----
+
+
+
+
+--
+====

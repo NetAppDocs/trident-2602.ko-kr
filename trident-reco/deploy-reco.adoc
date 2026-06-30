@@ -1,0 +1,31 @@
+---
+sidebar: sidebar 
+permalink: trident-reco/deploy-reco.html 
+keywords: deployment, deploy, trident, namespace 
+summary: Trident를 배포할 때 여기에 나열된 권장 사항을 사용하십시오. 
+---
+= 구축
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident를 배포할 때 여기에 나열된 권장 사항을 사용하십시오.
+
+
+
+== 전용 네임스페이스에 배포
+
+https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/["네임스페이스"^]서로 다른 애플리케이션 간의 관리적 분리를 제공하고 리소스 공유를 방해하는 요소가 될 수 있습니다. 예를 들어, 한 네임스페이스의 PVC는 다른 네임스페이스에서 사용할 수 없습니다. Trident는 Kubernetes 클러스터의 모든 네임스페이스에 PV 리소스를 제공하며, 따라서 높은 권한을 가진 서비스 계정을 활용합니다.
+
+또한 Trident Pod에 액세스하면 사용자가 스토리지 시스템 자격 증명 및 기타 민감한 정보에 액세스할 수 있습니다. 애플리케이션 사용자와 관리 애플리케이션이 Trident 객체 정의 또는 Pod 자체에 액세스할 수 없도록 하는 것이 중요합니다.
+
+
+
+== 할당량 및 범위 제한을 사용하여 스토리지 사용량 제어
+
+Kubernetes에는 애플리케이션의 리소스 사용량을 제한하는 강력한 메커니즘을 제공하는 두 가지 기능이 있습니다.  https://kubernetes.io/docs/concepts/policy/resource-quotas/#storage-resource-quota["스토리지 할당량 메커니즘"^]를 사용하면 관리자가 네임스페이스별로 전역 및 스토리지 클래스별 용량 및 객체 개수 사용량 제한을 구현할 수 있습니다. 또한  https://kubernetes.io/docs/tasks/administer-cluster/limit-storage-consumption/#limitrange-to-limit-requests-for-storage["범위 제한"^]를 사용하면 PVC 요청이 프로비저너로 전달되기 전에 최소값과 최대값 범위 내에 있는지 확인할 수 있습니다.
+
+이러한 값은 네임스페이스별로 정의되므로 각 네임스페이스는 리소스 요구 사항에 맞는 값을 정의해야 합니다. 에 대한 정보는 여기를 참조하십시오 https://netapp.io/2017/06/09/self-provisioning-storage-kubernetes-without-worry["할당량을 활용하는 방법"^].

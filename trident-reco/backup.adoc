@@ -1,0 +1,128 @@
+---
+sidebar: sidebar 
+permalink: trident-reco/backup.html 
+keywords: data protection, replication, dr, disaster recovery, snapmirror, back up, snapshot, element, volume replication 
+summary: Trident 및 Trident를 사용하여 생성된 볼륨에 대한 보호 및 복구 옵션에 대해 알아보십시오. 영구 저장 요구 사항이 있는 각 애플리케이션에 대해 데이터 보호 및 복구 전략을 수립해야 합니다. 
+---
+= 데이터 보호 및 재해 복구
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident 및 Trident를 사용하여 생성된 볼륨에 대한 보호 및 복구 옵션에 대해 알아보십시오. 영구 저장 요구 사항이 있는 각 애플리케이션에 대해 데이터 보호 및 복구 전략을 수립해야 합니다.
+
+
+
+== Trident 복제 및 복구
+
+재해 발생 시 Trident를 복원하기 위해 백업을 생성할 수 있습니다.
+
+
+
+=== Trident 복제
+
+Trident는 Kubernetes CRD를 사용하여 자체 상태를 저장 및 관리하고 Kubernetes 클러스터 etcd를 사용하여 메타데이터를 저장합니다.
+
+.단계
+. link:https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster["Kubernetes: etcd 클러스터 백업"^]을 사용하여 Kubernetes 클러스터 etcd를 백업합니다.
+. 백업 아티팩트를 FlexVol 볼륨에 저장하세요.
++
+
+NOTE: NetApp에서는 FlexVol이 있는 SVM을 SnapMirror 관계를 통해 다른 SVM으로 보호할 것을 권장합니다.
+
+
+
+
+
+=== Trident 복구
+
+Kubernetes CRD와 Kubernetes 클러스터 etcd 스냅샷을 사용하면 Trident를 복구할 수 있습니다.
+
+.단계
+. 타겟 SVM에서 Kubernetes etcd 데이터 파일과 인증서가 포함된 볼륨을 마스터 노드로 설정될 호스트에 마운트합니다.
+. Kubernetes 클러스터와 관련된 모든 필수 인증서를 `/etc/kubernetes/pki` 아래에 복사하고 etcd 멤버 파일을 `/var/lib/etcd` 아래에 복사하십시오.
+. link:https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#restoring-an-etcd-cluster["Kubernetes: etcd 클러스터 복원"^]을 사용하여 etcd 백업에서 Kubernetes 클러스터를 복원합니다.
+.  `kubectl get crd`를 실행하여 모든 Trident 사용자 지정 리소스가 제대로 활성화되었는지 확인하고 Trident 객체를 검색하여 모든 데이터를 사용할 수 있는지 확인합니다.
+
+
+
+
+== SVM 복제 및 복구
+
+Trident는 복제 관계를 구성할 수 없지만, 스토리지 관리자는 https://docs.netapp.com/us-en/ontap/data-protection/snapmirror-svm-replication-concept.html["ONTAP SnapMirror"^]를 사용하여 SVM을 복제할 수 있습니다.
+
+재해가 발생할 경우 SnapMirror 타겟 SVM을 활성화하여 데이터 제공을 시작할 수 있습니다. 시스템 복구가 완료되면 운영 SVM으로 다시 전환할 수 있습니다.
+
+.이 작업 정보
+SnapMirror SVM 복제 기능을 사용할 때 다음 사항을 고려하십시오.
+
+* SVM-DR이 활성화된 각 SVM에 대해 별도의 백엔드를 생성해야 합니다.
+* 필요한 경우에만 복제된 백엔드를 선택하도록 스토리지 클래스를 구성하여 SVM-DR을 지원하는 백엔드에 복제가 필요하지 않은 볼륨이 프로비저닝되지 않도록 하십시오.
+* 애플리케이션 관리자는 복제와 관련된 추가 비용 및 복잡성을 이해하고 이 프로세스를 시작하기 전에 복구 계획을 신중하게 고려해야 합니다.
+
+
+
+
+=== SVM 복제
+
+link:https://docs.netapp.com/us-en/ontap/data-protection/snapmirror-svm-replication-workflow-concept.html["ONTAP: SnapMirror SVM 복제"^]를 사용하여 SVM 복제 관계를 생성할 수 있습니다.
+
+SnapMirror를 사용하면 복제할 항목을 제어하는 옵션을 설정할 수 있습니다. <<Trident를 사용한 SVM 복구>>을 수행할 때 어떤 옵션을 선택했는지 알아야 합니다.
+
+* link:https://docs.netapp.com/us-en/ontap/data-protection/replicate-entire-svm-config-task.html["-identity-preserve true"^] 전체 SVM 구성을 복제합니다.
+* link:https://docs.netapp.com/us-en/ontap/data-protection/exclude-lifs-svm-replication-task.html["-discard-configs 네트워크"^] LIF 및 관련 네트워크 설정은 제외됩니다.
+* link:https://docs.netapp.com/us-en/ontap/data-protection/exclude-network-name-service-svm-replication-task.html["-identity-preserve false"^]볼륨과 보안 구성만 복제합니다.
+
+
+
+
+=== Trident를 사용한 SVM 복구
+
+Trident는 SVM 장애를 자동으로 감지하지 않습니다. 재해 발생 시 관리자는 수동으로 Trident 페일오버를 시작하여 새 SVM으로 전환할 수 있습니다.
+
+.단계
+. 예약 및 진행 중인 SnapMirror 전송을 취소하고, 복제 관계를 해제하고, 소스 SVM을 중지한 다음 SnapMirror 타겟 SVM을 활성화합니다.
+. SVM 복제를 구성할 때 `-identity-preserve false` 또는 `-discard-config network`를 지정한 경우 Trident 백엔드 정의 파일에서 `managementLIF` 및 `dataLIF`를 업데이트하십시오.
+.  `storagePrefix`가 Trident 백엔드 정의 파일에 있는지 확인합니다. 이 매개변수는 변경할 수 없습니다.  `storagePrefix`를 생략하면 백엔드 업데이트가 실패합니다.
+. 다음 명령어를 사용하여 필요한 모든 백엔드를 새 타겟 SVM 이름으로 업데이트하십시오.
++
+[listing]
+----
+./tridentctl update backend <backend-name> -f <backend-json-file> -n <namespace>
+----
+.  `-identity-preserve false` 또는  `discard-config network`를 지정한 경우 모든 애플리케이션 Pod를 재시작해야 합니다.
++
+
+NOTE:  `-identity-preserve true`을 지정한 경우 타겟 SVM이 활성화되면 Trident에서 프로비저닝한 모든 볼륨이 데이터 제공을 시작합니다.
+
+
+
+
+
+== 볼륨 복제 및 복구
+
+Trident는 SnapMirror 복제 관계를 구성할 수 없지만 스토리지 관리자는 link:https://docs.netapp.com/us-en/ontap/data-protection/snapmirror-disaster-recovery-concept.html["ONTAP SnapMirror 복제 및 복구"^]를 사용하여 Trident에서 생성한 볼륨을 복제할 수 있습니다.
+
+그런 다음 link:../trident-use/vol-import.html["tridentctl 볼륨 가져오기"]을 사용하여 복구된 볼륨을 Trident로 가져올 수 있습니다.
+
+
+NOTE:  `ontap-nas-economy`,  `ontap-san-economy` 또는  `ontap-flexgroup-economy` 드라이버에서는 가져오기가 지원되지 않습니다.
+
+
+
+== 스냅샷 데이터 보호
+
+다음 방법을 사용하여 데이터를 보호하고 복원할 수 있습니다.
+
+* 영구 볼륨(PV)의 Kubernetes 볼륨 스냅샷을 생성하기 위한 외부 스냅샷 컨트롤러 및 CRD.
++
+link:../trident-use/vol-snapshots.html["볼륨 스냅샷"]
+
+* ONTAP 스냅샷을 사용하여 볼륨의 전체 콘텐츠를 복원하거나 개별 파일 또는 LUN을 복구할 수 있습니다.
++
+link:https://docs.netapp.com/us-en/ontap/data-protection/manage-local-snapshot-copies-concept.html["ONTAP 스냅샷"^]
+
+

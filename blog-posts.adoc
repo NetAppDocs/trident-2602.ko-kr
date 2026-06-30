@@ -1,0 +1,54 @@
+---
+sidebar: sidebar 
+permalink: blog-posts.html 
+keywords: Trident blogs, Trident Protect blogs 
+summary: NetApp Trident 및 Trident Protect 블로그를 확인할 수 있습니다. 
+---
+= Trident 및 Trident Protect 블로그
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ./media/
+
+
+[role="lead"]
+여기에서 훌륭한 NetApp Trident 및 Trident Protect 블로그를 찾을 수 있습니다:
+
+
+
+== Trident 블로그
+
+* 2025년 10월 16일: link:https://www.netapp.com/blog/trident-25-10-advanced-kubernetes-storage-solutions/["Kubernetes를 위한 고급 스토리지 솔루션"^]
+* 2025년 08월 19일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Enhancing-Data-Consistency-Volume-Group-Snapshots-in-OpenShift-virtualization/ba-p/462798["데이터 일관성 향상: Trident를 사용한 OpenShift 가상화의 볼륨 그룹 스냅샷"^]
+* 2025년 05월 09일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Automatic-Trident-backend-configuration-for-FSx-for-ONTAP-with-the-Amazon-EKS/ba-p/460586["Amazon EKS 애드온을 사용한 FSx for ONTAP의 자동 Trident 백엔드 구성"^]
+* 2025년 04월 15일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/NetApp-Trident-with-Google-Cloud-NetApp-Volumes-for-SMB-Protocol/ba-p/460118["NetApp Trident와 SMB 프로토콜용 Google Cloud NetApp Volumes"^]
+* 2025년 04월 14일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Leveraging-Fiber-Channel-Protocol-with-Trident-25-02-for-Persistent-Storage-on/ba-p/460091["Kubernetes의 영구 스토리지를 위한 Trident 25.02로 Fiber Channel 프로토콜 활용"^]
+* 2025년 04월 14일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Unlocking-the-power-of-NetApp-ASA-r2-systems-for-Kubernetes-block-storage/ba-p/460113["쿠버네티스 블록 스토리지를 위한 NetApp ASA r2 시스템의 성능 활용하기"^]
+* 2025년 03월 31일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Simplifying-Trident-Installation-on-Red-Hat-OpenShift-with-the-New-Certified/ba-p/459710["새로운 인증된 Operator를 통해 Red Hat OpenShift에서 Trident 설치 간소화"^]
+* 2025년 03월 27일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Provisioning-Trident-for-SMB-with-Google-Cloud-NetApp-Volumes/ba-p/459629["Google Cloud NetApp Volumes를 사용한 SMB용 Trident 프로비저닝"^]
+* 2025년 03월 05일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Unlock-Seamless-iSCSI-Storage-Integration-A-Guide-to-FSxN-on-ROSA-Clusters-for/ba-p/459124["원활한 iSCSI 스토리지 통합 활용: AWS용 ROSA 클러스터의 FSxN 가이드"^]
+* 2025년 02월 27일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Deploying-cloud-identity-with-Trident-GKE-and-Google-Cloud-NetApp-Volumes/ba-p/458912["Trident, GKE 및 Google Cloud NetApp Volumes를 사용하여 클라우드 ID 배포"^]
+* 2024년 12월 12일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Introducing-Fibre-Channel-support-in-Trident/ba-p/457427["Trident의 Fibre Channel 지원 소개"^]
+* 2024년 11월 11일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/NetApp-Trident-with-Google-Cloud-NetApp-Volumes/ba-p/456484["NetApp Trident와 Google Cloud NetApp Volumes"^]
+* 2024년 10월 29일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Amazon-FSx-for-NetApp-ONTAP-with-Red-Hat-OpenShift-Service-on-AWS-ROSA-using/ba-p/456167["Trident를 사용하는 Amazon FSx for NetApp ONTAP with Red Hat OpenShift Service on AWS(ROSA)"^]
+* 2024년 10월 29일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Live-Migration-of-VMs-with-OpenShift-Virtualization-on-ROSA-and-Amazon-FSx-for/ba-p/456213["ROSA 및 Amazon FSx for NetApp ONTAP에서 OpenShift Virtualization을 사용한 VM의 라이브 마이그레이션"^]
+* 2024년 07월 08일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Using-NVMe-TCP-to-consume-ONTAP-storage-for-your-modern-containerized-apps-on/ba-p/453706["NVMe/TCP를 사용하여 Amazon EKS에서 최신 컨테이너화된 애플리케이션을 위한 ONTAP 스토리지 사용"^]
+* 2024년 07월 01일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Seamless-Kubernetes-storage-with-Google-Cloud-NetApp-Volumes-Flex-and-Astra/ba-p/453408["Google Cloud NetApp Volumes Flex 및 Astra Trident를 사용한 원활한 Kubernetes 스토리지"^]
+* 2024년 06월 11일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/ONTAP-as-backend-storage-for-the-integrated-image-registry-in-OpenShift/ba-p/453142["OpenShift의 통합 이미지 레지스트리를 위한 백엔드 스토리지로서의 ONTAP"^]
+
+
+
+
+== Trident Protect 블로그
+
+* 2025년 05월 16일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Automating-registry-failover-for-disaster-recovery-with-Trident-protect-post/ba-p/460777["Trident Protect 사후 복원 후크를 사용하여 재해 복구를 위한 레지스트리 페일오버 자동화"^]
+* 2025년 05월 16일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/OpenShift-Virtualization-Disaster-Recovery-with-NetApp-Trident-Protect/ba-p/460716["OpenShift Virtualization 재해 복구 with NetApp Trident Protect"^]
+* 2025년 05월 13일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Storage-class-migration-with-Trident-protect-backup-amp-restore/ba-p/460637["Trident Protect 백업 및 복원을 통한 스토리지 클래스 마이그레이션"^]
+* 2025년 05월 09일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Rescale-Kubernetes-applications-with-Trident-protect-post-restore-hooks/ba-p/460514["Trident Protect 복원 후 후크를 사용하여 Kubernetes 애플리케이션 재조정"^]
+* 2025년 04월 03일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Trident-Protect-Power-Up-Kubernetes-Replication-for-Protection-amp-Disaster/ba-p/459777["Trident Protect Power Up: 보호 및 재해 복구를 위한 Kubernetes 복제"^]
+* 2025년 3월 13일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Crash-Consistent-Backup-and-Restore-Operations-for-OpenShift-Virtualization-VMs/ba-p/459417["OpenShift 가상화 VM에 대한 충돌 정합성 보장 백업 및 복원 작업"^]
+* 2025년 3월 11일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Extending-GitOps-patterns-to-application-data-protection-with-NetApp-Trident/ba-p/459323["NetApp Trident를 사용하여 애플리케이션 데이터 보호에 GitOps 패턴 확장하기"^]
+* 2025년 3월 3일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Trident-25-02-Elevating-the-Red-Hat-OpenShift-Experience-with-Exciting-New/ba-p/459055["Trident 25.02: 새롭고 흥미로운 기능으로 Red Hat OpenShift 경험을 한 단계 끌어올리다"^]
+* 2025년 1월 15일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Introducing-Trident-protect-role-based-access-control/ba-p/457837["Trident Protect 역할 기반 액세스 제어 소개"^]
+* 2024년 11월 11일: link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Kubernetes-driven-data-management-The-new-era-with-Trident-protect/ba-p/456395["Kubernetes 기반 데이터 관리: Trident Protect와 함께하는 새로운 시대"^]
+

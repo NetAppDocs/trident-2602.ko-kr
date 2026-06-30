@@ -1,0 +1,522 @@
+---
+sidebar: sidebar 
+permalink: trident-use/worker-node-prep.html 
+keywords: storage class, manage storage class, storage classes, kubernetes storage classes, worker node, nfs, iscsi, kubernetes clusters, self-healing, healing, nvme, tcp 
+summary: Kubernetes 클러스터의 모든 워커 노드는 Pod에 프로비저닝된 볼륨을 마운트할 수 있어야 합니다. 백엔드 중 하나로 ontap-nas, ontap-nas-economy 또는 ontap-nas-flexgroup 드라이버를 사용하는 경우 워커 노드에 NFS 도구가 필요합니다. 그렇지 않은 경우에는 iSCSI 도구가 필요합니다. 
+---
+= 작업자 노드를 준비합니다
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Kubernetes 클러스터의 모든 워커 노드는 Pod에 프로비저닝된 볼륨을 마운트할 수 있어야 합니다. 워커 노드를 준비하려면 선택한 드라이버에 따라 NFS, iSCSI, NVMe/TCP 또는 FC 도구를 설치해야 합니다.
+
+
+
+== 적절한 도구 선택
+
+여러 드라이버를 조합해서 사용하는 경우, 해당 드라이버에 필요한 모든 도구를 설치해야 합니다. 최신 버전의 Red Hat Enterprise Linux CoreOS(RHCOS)에는 이러한 도구가 기본적으로 설치되어 있습니다.
+
+.NFS 도구
+link:https://docs.netapp.com/us-en/trident/trident-use/worker-node-prep.html#nfs-volumes["NFS 툴을 설치합니다"]다음을 사용하는 경우: `ontap-nas`, `ontap-nas-economy`, `ontap-nas-flexgroup` 또는 `azure-netapp-files`.
+
+.iSCSI 도구
+link:https://docs.netapp.com/us-en/trident/trident-use/worker-node-prep.html#install-the-iscsi-tools["iSCSI 도구를 설치합니다"]다음을 사용하는 경우: `ontap-san`, `ontap-san-economy`, `solidfire-san`.
+
+.NVMe 도구
+link:https://docs.netapp.com/us-en/trident/trident-use/worker-node-prep.html#nvmetcp-volumes["NVMe 툴을 설치합니다"]TCP(NVMe/TCP) 프로토콜을 통한 NVMe(Nonvolatile Memory Express)에 `ontap-san`를 사용하는 경우.
+
+
+NOTE: NetApp에서는 NVMe/TCP에 ONTAP 9.12 이상을 권장합니다.
+
+.FC를 통한 SCSI 툴
+FC 및 FC-NVMe SAN 호스트 구성에 대한 자세한 내용은 link:https://docs.netapp.com/us-en/ontap/san-config/configure-fc-nvme-hosts-ha-pairs-reference.html["FC 및 FC-NVMe SAN 호스트를 구성하는 방법"]를 참조하십시오.
+
+link:https://docs.netapp.com/us-en/trident/trident-use/worker-node-prep.html#install-the-fc-tools["FC 툴을 설치합니다"] `ontap-san`sanType `fcp`(FC를 통한 SCSI)을 사용하는 경우.
+
+*고려 사항*: * OpenShift 및 KubeVirt 환경에서는 FC를 통한 SCSI가 지원됩니다. * Docker에서는 FC를 통한 SCSI가 지원되지 않습니다. * iSCSI 자체 복구 기능은 FC를 통한 SCSI에는 적용되지 않습니다.
+
+.SMB 도구
+link:https://docs.netapp.com/us-en/trident/trident-use/worker-node-prep.html#prepare-to-provision-smb-volumes["SMB 볼륨 프로비저닝 준비"] 다음을 사용하는 경우: `ontap-nas` SMB 볼륨을 프로비저닝합니다.
+
+
+
+== 노드 서비스 검색
+
+Trident는 노드가 iSCSI 또는 NFS 서비스를 실행할 수 있는지 자동으로 감지하려고 시도합니다.
+
+
+NOTE: 노드 서비스 검색은 발견된 서비스를 식별하지만 서비스가 올바르게 구성되었음을 보장하지는 않습니다. 반대로, 검색된 서비스가 없다고 해서 볼륨 마운트가 반드시 실패하는 것은 아닙니다.
+
+.이벤트 검토
+Trident는 검색된 서비스를 식별하기 위해 노드에 대한 이벤트를 생성합니다. 이러한 이벤트를 검토하려면 다음을 실행합니다.
+
+[listing]
+----
+kubectl get event -A --field-selector involvedObject.name=<Kubernetes node name>
+----
+.검색된 서비스 검토
+Trident는 Trident 노드 CR에서 각 노드에 대해 활성화된 서비스를 식별합니다. 검색된 서비스를 보려면 다음을 실행합니다.
+
+[listing]
+----
+tridentctl get node -o wide -n <Trident namespace>
+----
+
+
+== NFS 볼륨
+
+운영 체제에 맞는 명령을 사용하여 NFS 툴을 설치합니다. 부팅 시 NFS 서비스가 시작되는지 확인합니다.
+
+[role="tabbed-block"]
+====
+.RHEL 8+
+--
+[listing]
+----
+sudo yum install -y nfs-utils
+----
+--
+.Ubuntu
+--
+[listing]
+----
+sudo apt-get install -y nfs-common
+----
+--
+====
+
+WARNING: NFS 도구를 설치한 후 워커 노드를 재부팅하여 컨테이너에 볼륨을 연결할 때 발생하는 오류를 방지하십시오.
+
+
+
+== iSCSI 볼륨
+
+Trident는 iSCSI 세션을 자동으로 설정하고, LUN을 스캔하고, 다중 경로 디바이스를 검색하고, 포맷하고, 포드에 마운트할 수 있습니다.
+
+
+
+=== iSCSI 자가 복구 기능
+
+ONTAP 시스템의 경우 Trident는 다음을 위해 5분마다 iSCSI 자체 복구를 실행합니다.
+
+. 원하는 iSCSI 세션 상태와 현재 iSCSI 세션 상태를 *식별*하십시오.
+. 원하는 상태와 현재 상태를 *비교하여* 필요한 수리를 파악합니다. Trident는 수리 우선순위와 수리를 선제적으로 진행해야 할 시점을 결정합니다.
+. 현재 iSCSI 세션 상태를 원하는 iSCSI 세션 상태로 되돌리기 위해 필요한 *복구*를 수행합니다.
+
+
+
+NOTE: 자가 복구 활동에 대한 로그는 해당 Daemonset Pod의  `trident-main` 컨테이너에 있습니다. 로그를 보려면 Trident 설치 시  `debug`를 "true"로 설정해야 합니다.
+
+Trident iSCSI 자가 복구 기능은 다음을 방지하는 데 도움이 될 수 있습니다.
+
+* 네트워크 연결 문제 발생 후 발생할 수 있는 오래되었거나 불안정한 iSCSI 세션. 오래된 세션의 경우 Trident는 로그아웃하기 전에 7분 동안 기다린 후 포털과의 연결을 다시 설정합니다.
++
+
+NOTE: 예를 들어 스토리지 컨트롤러에서 CHAP 암호가 교체되고 네트워크 연결이 끊어지면 이전(_만료된_) CHAP 암호가 계속 남아 있을 수 있습니다. 자가 복구 기능은 이러한 상황을 감지하고 자동으로 세션을 재설정하여 업데이트된 CHAP 암호를 적용할 수 있습니다.
+
+* iSCSI 세션 누락
+* 누락된 LUN
+
+
+*Trident 업그레이드 전 고려 사항*
+
+* 노드별 igroup(23.04 이상 버전에서 도입)만 사용하는 경우 iSCSI 자체 복구 기능은 SCSI 버스의 모든 디바이스에 대해 SCSI 재검색을 시작합니다.
+* 백엔드 범위 igroup(23.04부터 더 이상 사용되지 않음)만 사용 중인 경우 iSCSI 자가 복구는 SCSI 버스의 정확한 LUN ID에 대해 SCSI 재검색을 시작합니다.
+* 노드별 igroup과 백엔드 범위 igroup이 혼합되어 사용되는 경우 iSCSI 자체 복구는 SCSI 버스에서 정확한 LUN ID에 대한 SCSI 재검색을 시작합니다.
+
+
+
+
+=== iSCSI 도구를 설치합니다
+
+운영 체제에 맞는 명령을 사용하여 iSCSI 툴을 설치합니다.
+
+.시작하기 전에
+* Kubernetes 클러스터의 각 노드는 고유한 IQN을 가져야 합니다. *이는 필수 조건입니다.*
+* RHCOS 버전 4.5 이상 또는 기타 RHEL 호환 Linux 배포판을 `solidfire-san` 드라이버 및 Element OS 12.5 이하와 함께 사용하는 경우 `/etc/iscsi/iscsid.conf`에서 CHAP 인증 알고리즘이 MD5로 설정되어 있는지 확인하십시오. 안전한 FIPS 규격 준수 CHAP 알고리즘인 SHA1, SHA-256 및 SHA3-256은 Element 12.7에서 사용할 수 있습니다.
++
+[listing]
+----
+sudo sed -i 's/^\(node.session.auth.chap_algs\).*/\1 = MD5/' /etc/iscsi/iscsid.conf
+----
+* RHEL/Red Hat Enterprise Linux CoreOS (RHCOS)를 실행하는 워커 노드에서 iSCSI PV를 사용할 때, 인라인 공간 재확보를 수행하려면  `discard` mountOption을 StorageClass에 지정하십시오. 을 참조하십시오. https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_file_systems/discarding-unused-blocks_managing-file-systems["Red Hat 문서"^]
+*  `multipath-tools`의 최신 버전으로 업그레이드했는지 확인하십시오.
+
+
+[role="tabbed-block"]
+====
+.RHEL 8+
+--
+. 다음 시스템 패키지를 설치하십시오.
++
+[listing]
+----
+sudo yum install -y lsscsi iscsi-initiator-utils device-mapper-multipath
+----
+. iscsi-initiator-utils 버전이 6.2.0.874-2.el7 이상인지 확인하십시오.
++
+[listing]
+----
+rpm -q iscsi-initiator-utils
+----
+. 스캔을 수동으로 설정:
++
+[listing]
+----
+sudo sed -i 's/^\(node.session.scan\).*/\1 = manual/' /etc/iscsi/iscsid.conf
+----
+. 다중 경로 지정 활성화:
++
+[listing]
+----
+sudo mpathconf --enable --with_multipathd y --find_multipaths n
+----
++
+
+NOTE:  `/etc/multipath.conf`에  `find_multipaths no`이(가)  `defaults` 아래에 포함되어 있는지 확인하십시오.
+
+.  `iscsid` 및  `multipathd`가 실행 중인지 확인하십시오.
++
+[listing]
+----
+sudo systemctl enable --now iscsid multipathd
+----
+. 활성화 및 시작 `iscsi`:
++
+[listing]
+----
+sudo systemctl enable --now iscsi
+----
+
+
+--
+.Ubuntu
+--
+. 다음 시스템 패키지를 설치하십시오.
++
+[listing]
+----
+sudo apt-get install -y open-iscsi lsscsi sg3-utils multipath-tools scsitools
+----
+. open-iscsi 버전이 2.0.874-5ubuntu2.10 이상(bionic의 경우) 또는 2.0.874-7.1ubuntu6.1 이상(focal의 경우)인지 확인하십시오.
++
+[listing]
+----
+dpkg -l open-iscsi
+----
+. 스캔을 수동으로 설정:
++
+[listing]
+----
+sudo sed -i 's/^\(node.session.scan\).*/\1 = manual/' /etc/iscsi/iscsid.conf
+----
+. 다중 경로 지정 활성화:
++
+[listing]
+----
+sudo tee /etc/multipath.conf <<-EOF
+defaults {
+    user_friendly_names yes
+    find_multipaths no
+}
+EOF
+sudo systemctl enable --now multipath-tools.service
+sudo service multipath-tools restart
+----
++
+
+NOTE:  `/etc/multipath.conf`에  `find_multipaths no`이(가)  `defaults` 아래에 포함되어 있는지 확인하십시오.
+
+.  `open-iscsi` 및  `multipath-tools`가 활성화되어 실행 중인지 확인하십시오.
++
+[listing]
+----
+sudo systemctl status multipath-tools
+sudo systemctl enable --now open-iscsi.service
+sudo systemctl status open-iscsi
+----
++
+
+NOTE: Ubuntu 18.04의 경우, iSCSI 데몬이 시작되기 전에  `iscsiadm`를 사용하여 대상 포트를 검색해야 합니다 `open-iscsi`. 또는  `iscsi` 서비스를 수정하여  `iscsid`가 자동으로 시작되도록 할 수 있습니다.
+
+
+
+--
+====
+
+
+=== iSCSI 자가 복구 구성 또는 비활성화
+
+다음 Trident iSCSI 자체 복구 설정을 구성하여 오래된 세션을 수정할 수 있습니다.
+
+* *iSCSI 자가 복구 간격*: iSCSI 자가 복구가 실행되는 빈도를 결정합니다(기본값: 5분). 이 값을 작게 설정하면 더 자주 실행되도록 구성할 수 있고, 크게 설정하면 덜 자주 실행되도록 구성할 수 있습니다.
+
+
+[NOTE]
+====
+iSCSI 자체 복구 간격을 0으로 설정하면 iSCSI 자체 복구가 완전히 중지됩니다. iSCSI 자체 복구를 비활성화하는 것은 권장하지 않으며, iSCSI 자체 복구가 의도한 대로 작동하지 않거나 디버깅 목적으로 필요한 특정 시나리오에서만 비활성화해야 합니다.
+
+====
+* *iSCSI 자가 복구 대기 시간*: iSCSI 자가 복구 기능이 비정상 세션에서 로그아웃한 후 다시 로그인을 시도하기 전에 대기하는 시간을 결정합니다(기본값: 7분). 비정상으로 식별된 세션이 로그아웃된 후 다시 로그인을 시도하기 전에 더 오래 대기하도록 더 큰 값으로 구성하거나, 더 일찍 로그아웃하고 로그인하도록 더 작은 값으로 구성할 수 있습니다.
+
+
+[role="tabbed-block"]
+====
+.Helm
+--
+iSCSI 자체 복구 설정을 구성하거나 변경하려면 helm 설치 또는 helm 업데이트 중에  `iscsiSelfHealingInterval` 및  `iscsiSelfHealingWaitTime` 매개변수를 전달하십시오.
+
+다음 예는 iSCSI 자체 복구 간격을 3분으로, 자체 복구 대기 시간을 6분으로 설정합니다.
+
+[listing]
+----
+helm install trident trident-operator-100.2602.0.tgz --set iscsiSelfHealingInterval=3m0s --set iscsiSelfHealingWaitTime=6m0s -n trident
+----
+--
+.tridentctl
+--
+iSCSI 자체 복구 설정을 구성하거나 변경하려면 tridentctl 설치 또는 업데이트 중에  `iscsi-self-healing-interval` 및  `iscsi-self-healing-wait-time` 매개변수를 전달하십시오.
+
+다음 예는 iSCSI 자체 복구 간격을 3분으로, 자체 복구 대기 시간을 6분으로 설정합니다.
+
+[listing]
+----
+tridentctl install --iscsi-self-healing-interval=3m0s --iscsi-self-healing-wait-time=6m0s -n trident
+----
+--
+====
+
+
+== NVMe/TCP 볼륨
+
+사용 중인 운영 체제에 맞는 명령을 사용하여 NVMe 툴을 설치하십시오.
+
+[NOTE]
+====
+* NVMe에는 RHEL 9 이상이 필요합니다.
+* Kubernetes 노드의 커널 버전이 너무 오래되었거나 해당 커널 버전에 맞는 NVMe 패키지를 사용할 수 없는 경우 노드의 커널 버전을 NVMe 패키지가 포함된 버전으로 업데이트해야 할 수 있습니다.
+
+
+====
+[role="tabbed-block"]
+====
+.RHEL 9
+--
+[listing]
+----
+sudo yum install nvme-cli
+sudo yum install linux-modules-extra-$(uname -r)
+sudo modprobe nvme-tcp
+----
+--
+.Ubuntu
+--
+[listing]
+----
+sudo apt install nvme-cli
+sudo apt -y install linux-modules-extra-$(uname -r)
+sudo modprobe nvme-tcp
+----
+--
+====
+
+
+=== 설치 확인
+
+설치 후 다음 명령을 사용하여 Kubernetes 클러스터의 각 노드에 고유한 NQN이 있는지 확인하십시오.
+
+[listing]
+----
+cat /etc/nvme/hostnqn
+----
+
+WARNING: Trident는 `ctrl_device_tmo` 값을 수정하여 경로가 다운되더라도 NVMe가 경로를 포기하지 않도록 합니다. 이 설정을 변경하지 마십시오.
+
+
+
+== FC를 통한 SCSI 볼륨
+
+이제 Trident와 함께 파이버 채널(FC) 프로토콜을 사용하여 ONTAP 시스템의 스토리지 리소스를 프로비저닝하고 관리할 수 있습니다.
+
+
+
+=== 필수 구성 요소
+
+FC에 필요한 네트워크 및 노드 설정을 구성하십시오.
+
+
+
+==== 네트워크 설정
+
+. 대상 인터페이스의 WWPN을 가져오십시오. 자세한 내용은 https://docs.netapp.com/us-en/ontap-cli//network-interface-show.html["네트워크 인터페이스 show"^]을 참조하십시오.
+. 이니시에이터(호스트)의 인터페이스에 대한 WWPN을 가져옵니다.
++
+해당 호스트 운영 체제 유틸리티를 참조하십시오.
+
+. 호스트 및 타겟의 WWPN을 사용하여 FC 스위치에서 조닝을 구성합니다.
++
+자세한 내용은 해당 스위치 공급업체 설명서를 참조하십시오.
+
++
+자세한 내용은 다음 ONTAP 문서를 참조하십시오.
+
++
+** https://docs.netapp.com/us-en/ontap/san-config/fibre-channel-fcoe-zoning-concept.html["Fibre Channel 및 FCoE 조닝 개요"^]
+** https://docs.netapp.com/us-en/ontap/san-config/configure-fc-nvme-hosts-ha-pairs-reference.html["FC 및 FC-NVMe SAN 호스트를 구성하는 방법"^]
+
+
+
+
+
+
+=== FC 툴을 설치합니다
+
+운영 체제에 맞는 명령을 사용하여 FC 툴을 설치합니다.
+
+* FC PV를 사용하는 RHEL/Red Hat Enterprise Linux CoreOS(RHCOS) 워커 노드를 사용할 때, 인라인 공간 재확보를 수행하려면  `discard` StorageClass에서 mountOption을 지정하십시오. 을 참조하십시오. https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_file_systems/discarding-unused-blocks_managing-file-systems["Red Hat 문서"^]
+
+
+[role="tabbed-block"]
+====
+.RHEL 8+
+--
+. 다음 시스템 패키지를 설치하십시오.
++
+[listing]
+----
+sudo yum install -y lsscsi device-mapper-multipath
+----
+. 다중 경로 지정 활성화:
++
+[listing]
+----
+sudo mpathconf --enable --with_multipathd y --find_multipaths n
+----
++
+
+NOTE:  `/etc/multipath.conf`에  `find_multipaths no`이(가)  `defaults` 아래에 포함되어 있는지 확인하십시오.
+
+.  `multipathd`이(가) 실행 중인지 확인하십시오.
++
+[listing]
+----
+sudo systemctl enable --now multipathd
+----
+
+
+--
+.Ubuntu
+--
+. 다음 시스템 패키지를 설치하십시오.
++
+[listing]
+----
+sudo apt-get install -y lsscsi sg3-utils multipath-tools scsitools
+----
+. 다중 경로 지정 활성화:
++
+[listing]
+----
+sudo tee /etc/multipath.conf <<-EOF
+defaults {
+    user_friendly_names yes
+    find_multipaths no
+}
+EOF
+sudo systemctl enable --now multipath-tools.service
+sudo service multipath-tools restart
+----
++
+
+NOTE:  `/etc/multipath.conf`에  `find_multipaths no`이(가)  `defaults` 아래에 포함되어 있는지 확인하십시오.
+
+.  `multipath-tools`이(가) 활성화되어 실행 중인지 확인하십시오.
++
+[listing]
+----
+sudo systemctl status multipath-tools
+----
+
+
+--
+====
+
+
+== SMB 볼륨 프로비저닝 준비
+
+ `ontap-nas` 드라이버를 사용하여 SMB 볼륨을 프로비저닝할 수 있습니다.
+
+
+WARNING: ONTAP 온프레미스 클러스터용 `ontap-nas-economy` SMB 볼륨을 생성하려면 SVM에서 NFS 및 SMB/CIFS 프로토콜을 모두 구성해야 합니다. 이러한 프로토콜 중 하나라도 구성하지 않으면 SMB 볼륨 생성이 실패합니다.
+
+
+NOTE: `autoExportPolicy`는 SMB 볼륨에서 지원되지 않습니다.
+
+.시작하기 전에
+SMB 볼륨을 프로비저닝하기 전에 다음 사항을 충족해야 합니다.
+
+* Linux 컨트롤러 노드와 Windows Server 2022를 실행하는 하나 이상의 Windows 워커 노드로 구성된 Kubernetes 클러스터입니다. Trident는 Windows 노드에서 실행되는 Pod에 마운트된 SMB 볼륨만 지원합니다.
+* Active Directory 자격 증명이 포함된 Trident 비밀 키가 하나 이상 필요합니다. 비밀 키를 생성하려면 `smbcreds`:
++
+[listing]
+----
+kubectl create secret generic smbcreds --from-literal username=user --from-literal password='password'
+----
+* Windows 서비스로 구성된 CSI 프록시입니다.  `csi-proxy`를 구성하려면 Windows에서 실행되는 Kubernetes 노드에 대한 link:https://github.com/kubernetes-csi/csi-proxy["GitHub: CSI 프록시"^] 또는 link:https://github.com/Azure/aks-engine/blob/master/docs/topics/csi-proxy-windows.md["GitHub: Windows용 CSI 프록시"^]를 참조하십시오.
+
+
+.단계
+. 온프레미스 ONTAP의 경우 선택적으로 SMB 공유를 생성하거나 Trident가 대신 생성해 줄 수 있습니다.
++
+
+NOTE: Amazon FSx for ONTAP에는 SMB 공유가 필요합니다.
+
++
+SMB 관리자 공유는 link:https://learn.microsoft.com/en-us/troubleshoot/windows-server/system-management-components/what-is-microsoft-management-console["Microsoft Management Console"^] 공유 폴더 스냅인을 사용하거나 ONTAP CLI를 사용하는 두 가지 방법으로 생성할 수 있습니다. ONTAP CLI를 사용하여 SMB 공유를 생성하려면 다음을 수행합니다.
+
++
+.. 필요한 경우 공유에 대한 디렉터리 경로 구조를 생성하십시오.
++
+ `vserver cifs share create` 명령은 공유 생성 시 -path 옵션에 지정된 경로를 확인합니다. 지정된 경로가 존재하지 않으면 명령이 실패합니다.
+
+.. 지정된 SVM과 연결된 SMB 공유를 생성합니다.
++
+[listing]
+----
+vserver cifs share create -vserver vserver_name -share-name share_name -path path [-share-properties share_properties,...] [other_attributes] [-comment text]
+----
+.. 공유가 생성되었는지 확인합니다.
++
+[listing]
+----
+vserver cifs share show -share-name share_name
+----
++
+
+NOTE: 자세한 내용은 link:https://docs.netapp.com/us-en/ontap/smb-config/create-share-task.html["SMB 공유 생성"^]를 참조하십시오.
+
+
+
+. 백엔드를 생성할 때 SMB 볼륨을 지정하려면 다음을 구성해야 합니다. 모든 FSx for ONTAP 백엔드 구성 옵션에 대한 자세한 내용은 link:trident-fsx-examples.html["FSx for ONTAP 구성 옵션 및 예"]를 참조하십시오.
++
+[cols="1,2,1"]
+|===
+| 매개변수 | 설명 | 예 
+
+
+| `smbShare` | 다음 중 하나를 지정할 수 있습니다. Microsoft Management Console 또는 ONTAP CLI를 사용하여 생성한 SMB 공유의 이름, Trident가 SMB 공유를 생성할 수 있도록 허용하는 이름, 또는 볼륨에 대한 공통 공유 액세스를 방지하려면 매개 변수를 비워 둘 수 있습니다. 이 매개 변수는 온프레미스 ONTAP의 경우 선택 사항입니다. 이 매개 변수는 Amazon FSx for ONTAP 백엔드에 필요하며 비워 둘 수 없습니다. | `smb-share` 
+
+
+| `nasType` | * `smb`로 설정해야 합니다.* null인 경우 기본값은  `nfs`입니다. | `smb` 
+
+
+| `securityStyle` | 새 볼륨에 대한 보안 스타일입니다. *SMB 볼륨의 경우 `ntfs` 또는 `mixed`로 설정해야 합니다.* | `ntfs` 또는  `mixed` SMB 볼륨의 경우 
+
+
+| `unixPermissions` | 새 볼륨 모드입니다. *SMB 볼륨의 경우 비워 두어야 합니다.* | "" 
+|===
+

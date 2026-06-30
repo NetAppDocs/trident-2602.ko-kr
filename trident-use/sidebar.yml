@@ -1,0 +1,110 @@
+---
+section: trident-use
+title: Trident 사용
+entries:
+- title: 작업자 노드를 준비합니다
+  url: "/trident-use/worker-node-prep.html"
+- title: 백엔드 구성 및 관리
+  entries:
+  - title: 개요
+    url: "/trident-use/backends.html"
+  - title: Azure NetApp Files
+    entries:
+    - title: 개요
+      url: "/trident-use/anf.html"
+    - title: 구성 준비
+      url: "/trident-use/anf-prep.html"
+    - title: 구성 옵션 및 예
+      url: "/trident-use/anf-examples.html"
+  - title: Google Cloud NetApp Volumes
+    entries:
+    - title: 개요
+      url: "/trident-use/gcnv.html"
+    - title: 블록 스토리지 구성
+      url: "/trident-use/gcnv-block.html"
+    - title: 구성 준비
+      url: "/trident-use/gcnv-prep.html"
+    - title: 구성 옵션 및 예
+      url: "/trident-use/gcnv-examples.html"
+    - title: 자동 계층화 구성
+      url: "/trident-use/gcnv-auto-tiering.html"
+  - title: NetApp HCI 또는 SolidFire
+    url: "/trident-use/element.html"
+  - title: ONTAP SAN 드라이버
+    entries:
+    - title: 개요
+      url: "/trident-use/ontap-san.html"
+    - title: 구성 준비
+      url: "/trident-use/ontap-san-prep.html"
+    - title: 구성 옵션 및 예
+      url: "/trident-use/ontap-san-examples.html"
+  - title: ONTAP NAS 드라이버
+    entries:
+    - title: 개요
+      url: "/trident-use/ontap-nas.html"
+    - title: 구성 준비
+      url: "/trident-use/ontap-nas-prep.html"
+    - title: 구성 옵션 및 예
+      url: "/trident-use/ontap-nas-examples.html"
+  - title: Amazon FSx for NetApp ONTAP
+    entries:
+    - title: 개요
+      url: "/trident-use/trident-fsx.html"
+    - title: IAM 역할 및 AWS 시크릿을 생성합니다
+      url: "/trident-use/trident-fsx-iam-role.html"
+    - title: Trident 설치
+      url: "/trident-use/trident-fsx-install-trident.html"
+    - title: 스토리지 클래스 구성
+      url: "/trident-use/trident-fsx-storageclass-pvc.html"
+    - title: PVC 구성
+      url: "/trident-use/trident-fsx-create-pvc.html"
+    - title: 샘플 애플리케이션 배포
+      url: "/trident-use/trident-fsx-deploy-sample.html"
+    - title: EKS 클러스터에서 Trident EKS 애드온 구성
+      url: "/trident-use/trident-aws-addon.html"
+  - title: kubectl을 사용하여 백엔드 생성
+    url: "/trident-use/backend-kubectl.html"
+  - title: 백엔드 관리
+    entries:
+    - title: kubectl을 사용하여 백엔드 관리
+      url: "/trident-use/backend_ops_kubectl.html"
+    - title: tridentctl을 사용하여 백엔드 관리
+      url: "/trident-use/backend_ops_tridentctl.html"
+    - title: 백엔드 관리 옵션 간 이동
+      url: "/trident-use/backend_options.html"
+- title: 스토리지 클래스 생성 및 관리
+  entries:
+  - title: 스토리지 클래스를 생성합니다
+    url: "/trident-use/create-stor-class.html"
+  - title: 스토리지 클래스 관리
+    url: "/trident-use/manage-stor-class.html"
+- title: 볼륨 프로비저닝 및 관리
+  entries:
+  - title: 볼륨 프로비저닝
+    url: "/trident-use/vol-provision.html"
+  - title: 볼륨 확장
+    url: "/trident-use/vol-expansion.html"
+  - title: RWX NVMe 하위 시스템 제한 사항 이해
+    url: "/trident-use/trident-nvme-rwx-subsystem-limits.html"
+  - title: 컨트롤러 확장성
+    url: "/trident-use/controller-scalability.html"
+  - title: 자동 볼륨 확장
+    url: "/trident-use/automatic-volume-expansion.html"
+  - title: 자동 볼륨 확장 관리
+    url: "/trident-use/manage-autogrow-policies.html"
+  - title: 볼륨 가져오기
+    url: "/trident-use/vol-import.html"
+  - title: 볼륨 이름 사용자 지정
+    url: "/trident-use/vol-custom-name.html"
+  - title: 네임스페이스 간 NFS 볼륨 공유
+    url: "/trident-use/volume-share.html"
+  - title: 네임스페이스 간 볼륨 복제
+    url: "/trident-use/vol-clone-cross-namespace.html"
+  - title: SnapMirror를 사용하여 볼륨 복제
+    url: "/trident-use/vol-volume-replicate.html"
+  - title: CSI 토폴로지 사용
+    url: "/trident-use/csi-topology.html"
+  - title: 스냅샷 사용
+    url: "/trident-use/vol-snapshots.html"
+  - title: 볼륨 그룹 스냅샷 만들기
+    url: "/trident-use/vol-group-snapshots.html"

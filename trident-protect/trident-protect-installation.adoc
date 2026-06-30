@@ -1,0 +1,151 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-installation.html 
+keywords: install, trident, protect, requirements, registry 
+summary: 사용 환경이 요구 사항을 충족하는 경우 다음 단계를 따라 Trident Protect를 설치할 수 있습니다. 
+---
+= Trident Protect를 설치하고 구성합니다.
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+사용 환경이 Trident Protect의 요구 사항을 충족하는 경우 다음 단계에 따라 클러스터에 Trident Protect를 설치할 수 있습니다. Trident Protect는 NetApp에서 얻거나 자체 프라이빗 레지스트리에서 설치할 수 있습니다. 클러스터가 인터넷에 액세스할 수 없는 경우 프라이빗 레지스트리에서 설치하는 것이 유용합니다.
+
+
+
+== Trident Protect를 설치합니다
+
+[role="tabbed-block"]
+====
+.NetApp에서 Trident Protect 설치
+--
+.단계
+. Trident Helm 리포지토리 추가:
++
+[source, console]
+----
+helm repo add netapp-trident-protect https://netapp.github.io/trident-protect-helm-chart
+----
+. Helm을 사용하여 Trident Protect를 설치합니다.  `<name-of-cluster>`를 클러스터 이름으로 바꾸세요. 이 이름은 클러스터에 할당되어 클러스터의 백업 데이터 및 스냅샷을 식별하는 데 사용됩니다.
++
+[source, console]
+----
+helm install trident-protect netapp-trident-protect/trident-protect --set clusterName=<name-of-cluster> --version 100.2602.0 --create-namespace --namespace trident-protect
+----
+. 선택적으로 디버그 로깅을 활성화하려면(문제 해결 권장) 다음을 사용하십시오.
++
+[source, console]
+----
+helm install trident-protect netapp-trident-protect/trident-protect --set clusterName=<name-of-cluster> --set logLevel=debug --version 100.2602.0 --create-namespace --namespace trident-protect
+----
++
+디버그 로깅은 NetApp 지원팀이 로그 레벨 변경이나 문제 재현 없이 문제를 해결하는 데 도움이 됩니다.
+
+
+
+--
+.개인 레지스트리에서 Trident Protect를 설치하세요
+--
+Kubernetes 클러스터가 인터넷에 액세스할 수 없는 경우 개인 이미지 레지스트리에서 Trident Protect를 설치할 수 있습니다. 다음 예에서 괄호 안의 값은 사용자 환경에 맞는 정보로 바꾸십시오.
+
+.단계
+. 다음 이미지를 로컬 시스템으로 가져오고 태그를 업데이트한 다음 프라이빗 레지스트리로 푸시합니다.
++
+[source, console]
+----
+docker.io/netapp/controller:26.02.0
+docker.io/netapp/restic:26.02.0
+docker.io/netapp/kopia:26.02.0
+docker.io/netapp/kopiablockrestore:26.02.0
+docker.io/netapp/trident-autosupport:26.02.0
+docker.io/netapp/exechook:26.02.0
+docker.io/netapp/resourcebackup:26.02.0
+docker.io/netapp/resourcerestore:26.02.0
+docker.io/netapp/resourcedelete:26.02.0
+docker.io/netapp/trident-protect-utils:v1.0.0
+----
++
+예를 들면 다음과 같습니다.
+
++
+[source, console]
+----
+docker pull docker.io/netapp/controller:26.02.0
+----
++
+[source, console]
+----
+docker tag docker.io/netapp/controller:26.02.0 <private-registry-url>/controller:26.02.0
+----
++
+[source, console]
+----
+docker push <private-registry-url>/controller:26.02.0
+----
++
+
+NOTE: Helm 차트를 얻으려면 먼저 인터넷에 연결된 컴퓨터에서 `helm pull trident-protect --version 100.2602.0 --repo https://netapp.github.io/trident-protect-helm-chart`를 사용하여 Helm 차트를 다운로드한 다음, 생성된 `trident-protect-100.2602.0.tgz` 파일을 오프라인 환경으로 복사하고 마지막 단계에서 저장소 참조 대신 `helm install trident-protect ./trident-protect-100.2602.0.tgz`를 사용하여 설치하십시오.
+
+. Trident Protect 시스템 네임스페이스를 생성합니다.
++
+[source, console]
+----
+kubectl create ns trident-protect
+----
+. 레지스트리에 로그인합니다.
++
+[source, console]
+----
+helm registry login <private-registry-url> -u <account-id> -p <api-token>
+----
+. 프라이빗 레지스트리 인증에 사용할 풀 시크릿을 생성합니다.
++
+[source, console]
+----
+kubectl create secret docker-registry regcred --docker-username=<registry-username> --docker-password=<api-token> -n trident-protect --docker-server=<private-registry-url>
+----
+. Trident Helm 리포지토리 추가:
++
+[source, console]
+----
+helm repo add netapp-trident-protect https://netapp.github.io/trident-protect-helm-chart
+----
+.  `protectValues.yaml`라는 이름의 파일을 생성하세요. 해당 파일에 다음 Trident Protect 설정이 포함되어 있는지 확인하세요.
++
+[source, yaml]
+----
+---
+imageRegistry: <private-registry-url>
+imagePullSecrets:
+  - name: regcred
+----
++
+
+NOTE:  `imageRegistry` 및  `imagePullSecrets` 값은  `resourcebackup` 및  `resourcerestore`를 포함한 모든 구성 요소 이미지에 적용됩니다. 레지스트리 내의 특정 저장소 경로(예:  `example.com:443/my-repo`)에 이미지를 푸시하는 경우 레지스트리 필드에 전체 경로를 포함하십시오. 이렇게 하면 모든 이미지가  `<private-registry-url>/<image-name>:<tag>`에서 가져와집니다.
+
+. Helm을 사용하여 Trident Protect를 설치합니다.  `<name_of_cluster>`를 클러스터 이름으로 바꾸세요. 이 이름은 클러스터에 할당되어 클러스터의 백업 데이터 및 스냅샷을 식별하는 데 사용됩니다.
++
+[source, console]
+----
+helm install trident-protect netapp-trident-protect/trident-protect --set clusterName=<name_of_cluster> --version 100.2602.0 --create-namespace --namespace trident-protect -f protectValues.yaml
+----
+. 선택적으로 디버그 로깅을 활성화하려면(문제 해결 권장) 다음을 사용하십시오.
++
+[source, console]
+----
+helm install trident-protect netapp-trident-protect/trident-protect --set clusterName=<name-of-cluster> --set logLevel=debug --version 100.2602.0 --create-namespace --namespace trident-protect -f protectValues.yaml
+----
++
+디버그 로깅은 NetApp 지원팀이 로그 레벨 변경이나 문제 재현 없이 문제를 해결하는 데 도움이 됩니다.
+
+
+
+--
+====
+
+NOTE: AutoSupport 설정 및 네임스페이스 필터링을 포함한 추가 Helm 차트 구성 옵션은 link:trident-protect-customize-installation.html#configure-additional-trident-protect-helm-chart-settings["Trident Protect 설치 사용자 지정"]를 참조하십시오.

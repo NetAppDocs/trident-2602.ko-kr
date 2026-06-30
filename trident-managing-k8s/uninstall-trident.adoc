@@ -1,0 +1,100 @@
+---
+sidebar: sidebar 
+permalink: trident-managing-k8s/uninstall-trident.html 
+keywords: uninstall, Trident, methods, operator, tridentctl, helm, downgrade, obliviate, crds, wipeout, downgrade 
+summary: Trident를 설치하는 데 사용한 것과 동일한 방법을 사용하여 Trident를 제거해야 합니다. 업그레이드 후 발견된 버그, 종속성 문제 또는 업그레이드 실패나 불완전한 업그레이드에 대한 수정이 필요한 경우, Trident를 제거하고 이전 버전의 설치 지침에 따라 이전 버전을 다시 설치해야 합니다. 
+---
+= Trident 제거
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident를 설치하는 데 사용한 것과 동일한 방법을 사용하여 Trident를 제거해야 합니다.
+
+.이 작업 정보
+* 업그레이드 후 발견된 버그, 종속성 문제 또는 업그레이드 실패나 불완전한 업그레이드에 대한 수정이 필요한 경우, Trident를 제거하고 해당 link:../earlier-versions.html["버전"]에 대한 특정 지침을 사용하여 이전 버전을 다시 설치해야 합니다. 이것이 이전 버전으로 _다운그레이드_하는 유일하게 권장되는 방법입니다.
+* 간편한 업그레이드 및 재설치를 위해 Trident를 제거해도 Trident에서 생성한 CRD 또는 관련 객체는 제거되지 않습니다. Trident와 모든 데이터를 완전히 제거해야 하는 경우 link:../troubleshooting.html#completely-remove-trident-and-crds["Trident 및 CRD를 완전히 제거합니다"]를 참조하십시오.
+
+
+.시작하기 전에
+Kubernetes 클러스터를 사용 중지하는 경우 제거하기 전에 Trident에서 생성한 볼륨을 사용하는 모든 애플리케이션을 삭제해야 합니다. 이렇게 하면 PVC가 삭제되기 전에 Kubernetes 노드에서 게시 취소됩니다.
+
+
+
+== 원래 설치 방법을 확인하십시오
+
+Trident를 설치할 때 사용했던 방법과 동일한 방법으로 Trident를 제거해야 합니다. 제거하기 전에 원래 Trident를 설치하는 데 사용한 버전을 확인하십시오.
+
+.  `kubectl get pods -n trident`를 사용하여 Pod를 검사합니다.
++
+** 오퍼레이터 포드가 없는 경우 Trident가 `tridentctl`을 사용하여 설치되었습니다.
+** 오퍼레이터 포드가 있는 경우, Trident는 수동으로 또는 Helm을 사용하여 Trident 오퍼레이터를 통해 설치되었습니다.
+
+
+. 운영자 포드가 있는 경우 `kubectl describe tproc trident`를 사용하여 Helm을 통해 Trident가 설치되었는지 확인합니다.
++
+** Helm 레이블이 있는 경우 Trident는 Helm을 사용하여 설치되었습니다.
+** Helm 레이블이 없으면 Trident 운영자를 사용하여 Trident를 수동으로 설치한 것입니다.
+
+
+
+
+
+
+== Trident 운영자 설치를 제거합니다
+
+Trident Operator 설치는 수동으로 또는 Helm을 사용하여 제거할 수 있습니다.
+
+
+
+=== 수동 설치 제거
+
+운영자를 사용하여 Trident를 설치한 경우 다음 중 하나를 수행하여 제거할 수 있습니다.
+
+. **CR `TridentOrchestrator`을 편집하고 제거 플래그를 설정하세요**:
++
+[listing]
+----
+kubectl patch torc <trident-orchestrator-name> --type=merge -p '{"spec":{"uninstall":true}}'
+----
++
+ `uninstall` 플래그가  `true`로 설정되면 Trident 운영자는 Trident를 제거하지만 TridentOrchestrator 자체는 제거하지 않습니다. Trident를 다시 설치하려면 TridentOrchestrator를 정리하고 새로 생성해야 합니다.
+
+. **삭제 `TridentOrchestrator`**: Trident를 배포하는 데 사용된 `TridentOrchestrator` CR을 제거하면 운영자에게 Trident를 제거하도록 지시합니다. 운영자는 `TridentOrchestrator` 제거를 처리하고 Trident 배포 및 데몬셋을 제거하며, 설치 과정에서 생성한 Trident Pod를 삭제합니다.
++
+[listing]
+----
+kubectl delete -f deploy/<bundle.yaml> -n <namespace>
+----
+
+
+
+
+=== Helm 설치 제거
+
+Helm을 사용하여 Trident를 설치한 경우 `helm uninstall`를 사용하여 제거할 수 있습니다.
+
+[listing]
+----
+#List the Helm release corresponding to the Trident install.
+helm ls -n trident
+NAME          NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                           APP VERSION
+trident       trident         1               2021-04-20 00:26:42.417764794 +0000 UTC deployed        trident-operator-21.07.1        21.07.1
+
+#Uninstall Helm release to remove Trident
+helm uninstall trident -n trident
+release "trident" uninstalled
+----
+
+
+==  `tridentctl` 설치 제거
+
+Trident와 관련된 CRD 및 관련 오브젝트를 제외한 모든 리소스를 삭제하려면  `uninstall` 명령을  `tridentctl`에서 사용하십시오.
+
+[listing]
+----
+./tridentctl uninstall -n <namespace>
+----

@@ -1,0 +1,179 @@
+---
+sidebar: sidebar 
+permalink: trident-use/anf.html 
+keywords: trident backend, azure netapp files, smb volumes, smb, windows, drivers, access modes, rwo, rwx, rwp, rwop, file system, aks, managed identities, azure, azure government 
+summary: Azure NetApp Files를 Trident의 백엔드로 구성하고 NFS 또는 SMB 볼륨을 사용하십시오. Trident는 AKS 클러스터에서 관리 ID 및 워크로드 ID를 지원합니다. 
+---
+= Azure NetApp Files 백엔드 구성
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Azure NetApp Files를 Trident의 백엔드로 사용합니다. 이 백엔드는 NFS 및 SMB 볼륨을 지원합니다. Trident는 Azure Kubernetes Service(AKS) 클러스터에 대한 관리 ID 및 워크로드 ID를 지원합니다.
+
+
+
+== 지원되는 Azure 클라우드 환경
+
+Trident는 다양한 Azure 클라우드 환경에서 Azure NetApp Files 백엔드를 지원합니다.
+
+지원되는 Azure 클라우드는 다음과 같습니다.
+
+* Azure Commercial
+* Azure Government(Azure Government/MAG)
+
+
+Trident를 배포하거나 Azure NetApp Files 백엔드를 구성할 때 Azure Resource Manager 및 인증 엔드포인트가 Azure 클라우드 환경과 일치하는지 확인하십시오.
+
+
+
+== Azure NetApp Files 드라이버 지원 검토
+
+Trident는 다음과 같은 Azure NetApp Files 스토리지 드라이버를 제공합니다.
+
+지원되는 액세스 모드에는 _ReadWriteOnce_(RWO), _ReadOnlyMany_(ROX), _ReadWriteMany_(RWX) 및 _ReadWriteOncePod_(RWOP)가 포함됩니다.
+
+[cols="2,1,1,2,2"]
+|===
+| 드라이버 | 프로토콜 | volumeMode | 지원되는 액세스 모드 | 지원되는 파일 시스템 
+
+
+| `azure-netapp-files`  a| 
+NFS SMB
+ a| 
+파일 시스템
+ a| 
+RWO, ROX, RWX, RWOP
+ a| 
+`nfs`, `smb`
+
+|===
+
+
+== 검토 시 고려 사항
+
+* Azure NetApp Files는 50GiB보다 작은 볼륨을 지원하지 않습니다. 더 작은 볼륨을 요청하면 Trident는 50GiB 볼륨을 생성합니다.
+* Trident는 Windows 노드에서 실행되는 Pod에 마운트된 SMB 볼륨만 지원합니다.
+* 비상업용 Azure 클라우드에 Azure NetApp Files를 배포하려면 클라우드별 Azure Resource Manager 및 인증 엔드포인트가 필요합니다. Trident와 모든 백엔드 구성이 Azure 클라우드 환경에 적합한 엔드포인트를 사용하는지 확인하십시오.
+
+
+
+
+== AKS에 관리형 ID 사용
+
+Trident는 AKS 클러스터에 대한 link:https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview["관리 ID"^]를 지원합니다.
+
+ `tridentctl`를 사용하여 Azure NetApp Files 백엔드를 생성하거나 관리하는 경우 올바른 Azure 클라우드 환경에 대해 구성되어 있는지 확인하십시오.
+
+관리형 ID를 사용하려면 다음이 필요합니다.
+
+* AKS를 사용하여 배포된 Kubernetes 클러스터
+* AKS Kubernetes 클러스터에 구성된 관리 ID
+*  `cloudProvider`이(가)  `"Azure"`(으)로 설정된 상태로 Trident가 설치되었습니다
+
+
+[role="tabbed-block"]
+====
+.Trident 운영자
+--
+ `tridentorchestrator_cr.yaml`을 편집하고  `cloudProvider`를  `"Azure"`로 설정하세요.
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentOrchestrator
+metadata:
+  name: trident
+spec:
+  debug: true
+  namespace: trident
+  imagePullPolicy: IfNotPresent
+  cloudProvider: "Azure"
+----
+--
+.Helm
+--
+다음 예시는 Trident를 설치하고 환경 변수 `cloudProvider`를 사용하여 `$CP`를 설정합니다:
+
+[listing]
+----
+helm install trident trident-operator-100.2602.0.tgz --create-namespace --namespace <trident-namespace> --set cloudProvider=$CP
+----
+--
+.<code>tridentctl</code>
+--
+다음 예제는 Trident를 설치하고 `cloud-provider` 플래그를 `Azure`로 설정합니다:
+
+[listing]
+----
+tridentctl install --cloud-provider="Azure" -n trident
+----
+--
+====
+
+
+== AKS에 워크로드 ID 사용
+
+워크로드 ID를 사용하면 Kubernetes Pod가 워크로드 ID로 인증하여 Azure 리소스에 액세스할 수 있습니다.
+
+ `tridentctl`를 사용하여 Azure NetApp Files 백엔드를 생성하거나 관리하는 경우 올바른 Azure 클라우드 환경에 대해 구성되어 있는지 확인하십시오.
+
+워크로드 ID를 사용하려면 다음이 필요합니다.
+
+* AKS를 사용하여 배포된 Kubernetes 클러스터
+* AKS Kubernetes 클러스터에 구성된 워크로드 ID 및 oidc-issuer
+* Trident `cloudProvider` `"Azure"` `cloudIdentity`워크로드 ID 값으로 설정하여 설치되었습니다.
+
+
+[role="tabbed-block"]
+====
+.Trident 운영자
+--
+ `tridentorchestrator_cr.yaml`을 편집하고  `cloudProvider`를  `"Azure"`로 설정하세요.  `cloudIdentity`를  `azure.workload.identity/client-id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx`로 설정하세요.
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentOrchestrator
+metadata:
+  name: trident
+spec:
+  debug: true
+  namespace: trident
+  imagePullPolicy: IfNotPresent
+  cloudProvider: "Azure"
+  cloudIdentity: 'azure.workload.identity/client-id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx' # Edit
+----
+--
+.Helm
+--
+다음 환경 변수를 사용하여 *cloud-provider(CP)* 및 *cloud-identity(CI)* 플래그 값을 설정하십시오.
+
+`export CP="Azure"`
+`export CI="'azure.workload.identity/client-id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx'"`
+
+다음 예제는 Trident를 설치하고 `cloudProvider`를 사용하여 `$CP`를 설정하고 `cloudIdentity`를 사용하여 `$CI`를 설정합니다:
+
+[listing]
+----
+helm install trident trident-operator-100.6.0.tgz --set cloudProvider=$CP --set cloudIdentity="$CI"
+----
+--
+.<code>tridentctl</code>
+--
+다음 환경 변수를 사용하여 *cloud provider* 및 *cloud identity* 플래그 값을 설정하십시오.
+
+`export CP="Azure"`
+`export CI="azure.workload.identity/client-id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"`
+
+다음 예제는 Trident를 설치하고  `cloud-provider`을  `$CP`로,  `cloud-identity`을  `$CI`로 설정합니다:
+
+[listing]
+----
+tridentctl install --cloud-provider=$CP --cloud-identity="$CI" -n trident
+----
+--
+====

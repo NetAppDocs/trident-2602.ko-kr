@@ -1,0 +1,231 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-customize-installation.html 
+keywords: customize, trident protect, resource limits, security context constraints, SCC, NetApp AutoSupport, proxy connection, helm, helm chart, helm upgrade 
+summary: Trident Protect의 기본 설정을 사용자 지정하여 특정 요구 사항을 충족하십시오. 
+---
+= Trident Protect 설치 사용자 지정
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+사용자 환경의 특정 요구 사항을 충족하도록 Trident Protect의 기본 구성을 사용자 지정할 수 있습니다.
+
+
+
+== Trident Protect 컨테이너 리소스 제한 지정
+
+Trident Protect를 설치한 후 구성 파일을 사용하여 Trident Protect 컨테이너에 대한 리소스 제한을 지정할 수 있습니다. 리소스 제한을 설정하면 Trident Protect 작업에서 소비하는 클러스터 리소스의 양을 제어할 수 있습니다.
+
+.단계
+.  `resourceLimits.yaml`라는 이름의 파일을 생성하세요.
+. 환경의 요구 사항에 따라 Trident Protect 컨테이너에 대한 리소스 제한 옵션으로 파일을 채웁니다.
++
+다음 예제 구성 파일에는 사용 가능한 설정이 표시되어 있으며 각 리소스 제한의 기본값이 포함되어 있습니다.
+
++
+[source, yaml]
+----
+---
+jobResources:
+  defaults:
+    limits:
+      cpu: 8000m
+      memory: 10000Mi
+      ephemeralStorage: ""
+    requests:
+      cpu: 100m
+      memory: 100Mi
+      ephemeralStorage: ""
+  resticVolumeBackup:
+    limits:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+    requests:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+  resticVolumeRestore:
+    limits:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+    requests:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+  kopiaVolumeBackup:
+    limits:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+    requests:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+  kopiaVolumeRestore:
+    limits:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+    requests:
+      cpu: ""
+      memory: ""
+      ephemeralStorage: ""
+----
+.  `resourceLimits.yaml` 파일의 값을 적용합니다.
++
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect -f resourceLimits.yaml --reuse-values
+----
+
+
+
+
+== 보안 컨텍스트 제약 조건 사용자 지정
+
+구성 파일을 사용하여 Trident Protect 설치 후 Trident Protect 컨테이너에 대한 OpenShift 보안 컨텍스트 제약 조건(SCC)을 수정할 수 있습니다. 이러한 제약 조건은 Red Hat OpenShift 클러스터의 Pod에 대한 보안 제한을 정의합니다.
+
+.단계
+.  `sccconfig.yaml`라는 이름의 파일을 생성하세요.
+. 파일에 SCC 옵션을 추가하고 환경 요구 사항에 따라 매개 변수를 수정합니다.
++
+다음 예는 SCC 옵션의 매개변수 기본값을 보여줍니다.
+
++
+[source, yaml]
+----
+scc:
+  create: true
+  name: trident-protect-job
+  priority: 1
+----
++
+이 표에서는 SCC 옵션의 매개 변수에 대해 설명합니다.
+
++
+|===
+| 매개변수 | 설명 | 기본값 
+
+
+| 생성 | SCC 리소스를 생성할 수 있는지 여부를 결정합니다.  `scc.create`이 `true`로 설정되어 있고 Helm 설치 프로세스가 OpenShift 환경을 식별하는 경우에만 SCC 리소스가 생성됩니다. OpenShift에서 작동하지 않거나 `scc.create`이 `false`로 설정되어 있는 경우 SCC 리소스가 생성되지 않습니다. | true 
+
+
+| 이름 | SCC의 이름을 지정합니다. | trident-protect-job 
+
+
+| 우선순위 | SCC의 우선순위를 정의합니다. 우선순위 값이 높은 SCC는 값이 낮은 SCC보다 먼저 평가됩니다. | 1 
+|===
+.  `sccconfig.yaml` 파일의 값을 적용합니다.
++
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect -f sccconfig.yaml --reuse-values
+----
++
+이렇게 하면 기본값이  `sccconfig.yaml` 파일에 지정된 값으로 대체됩니다.
+
+
+
+
+
+== Trident Protect 헬름 차트의 추가 설정을 구성합니다
+
+AutoSupport 설정 및 네임스페이스 필터링을 사용자 지정하여 특정 요구 사항을 충족할 수 있습니다. 다음 표는 사용 가능한 구성 매개변수를 설명합니다.
+
+|===
+| 매개변수 | 유형 | 설명 
+
+
+| autoSupport.프록시 | 문자열 | NetApp AutoSupport 연결을 위한 프록시 URL을 구성합니다. 이 설정을 사용하여 지원 번들 업로드를 프록시 서버를 통해 라우팅합니다. 예: `http://my.proxy.url`. 
+
+
+| autoSupport.insecure | boolean | AutoSupport 프록시 연결에 대해  `true`로 설정하면 TLS 검증을 건너뜁니다. 안전하지 않은 프록시 연결에만 사용하십시오. (기본값: `false`) 
+
+
+| autoSupport.enabled | boolean | Trident Protect AutoSupport 번들 일일 업로드 기능을 활성화 또는 비활성화합니다.  `false`로 설정하면 예약된 일일 업로드가 비활성화되지만 수동으로 지원 번들을 생성할 수는 있습니다. (기본값: `true`) 
+
+
+| restoreSkipNamespaceAnnotations | 문자열 | 백업 및 복원 작업에서 제외할 네임스페이스 주석의 쉼표로 구분된 목록입니다. 주석을 기반으로 네임스페이스를 필터링할 수 있습니다. 
+
+
+| restoreSkipNamespaceLabels | 문자열 | 백업 및 복원 작업에서 제외할 네임스페이스 레이블을 쉼표로 구분하여 나열합니다. 레이블을 기준으로 네임스페이스를 필터링할 수 있습니다. 
+|===
+YAML 구성 파일 또는 명령줄 플래그를 사용하여 이러한 옵션을 구성할 수 있습니다.
+
+[role="tabbed-block"]
+====
+.YAML 파일 사용
+--
+.단계
+. 구성 파일을 생성하고 이름을 지정하세요 `values.yaml`.
+. 생성한 파일에 사용자 지정하려는 구성 옵션을 추가하세요.
++
+[source, console]
+----
+autoSupport:
+  enabled: false
+  proxy: http://my.proxy.url
+  insecure: true
+restoreSkipNamespaceAnnotations: "annotation1,annotation2"
+restoreSkipNamespaceLabels: "label1,label2"
+----
+.  `values.yaml` 파일에 올바른 값을 입력한 후 구성 파일을 적용합니다.
++
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect -f values.yaml --reuse-values
+----
+
+
+--
+.CLI 플래그 사용
+--
+.단계
+.  `--set` 플래그와 함께 다음 명령을 사용하여 개별 매개변수를 지정하십시오.
++
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect \
+  --set autoSupport.enabled=false \
+  --set autoSupport.proxy=http://my.proxy.url \
+  --set-string restoreSkipNamespaceAnnotations="{annotation1,annotation2}" \
+  --set-string restoreSkipNamespaceLabels="{label1,label2}" \
+  --reuse-values
+----
+
+
+--
+====
+
+
+== Trident Protect Pod를 특정 노드로 제한합니다
+
+Kubernetes nodeSelector 노드 선택 제약 조건을 사용하여 노드 레이블을 기반으로 Trident Protect Pod를 실행할 수 있는 노드를 제어할 수 있습니다. 기본적으로 Trident Protect는 Linux를 실행하는 노드로 제한됩니다. 필요에 따라 이러한 제약 조건을 추가로 사용자 지정할 수 있습니다.
+
+.단계
+.  `nodeSelectorConfig.yaml`라는 이름의 파일을 생성하세요.
+. 파일에 nodeSelector 옵션을 추가하고 환경 요구 사항에 따라 제한하도록 노드 레이블을 추가하거나 변경하도록 파일을 수정합니다. 예를 들어, 다음 파일에는 기본 OS 제한이 포함되어 있지만 특정 지역 및 앱 이름도 대상으로 지정합니다.
++
+[source, yaml]
+----
+nodeSelector:
+  kubernetes.io/os: linux
+  region: us-west
+  app.kubernetes.io/name: mysql
+----
+.  `nodeSelectorConfig.yaml` 파일의 값을 적용합니다.
++
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect -f nodeSelectorConfig.yaml --reuse-values
+----
++
+이렇게 하면 기본 제한 사항이  `nodeSelectorConfig.yaml` 파일에 지정한 제한 사항으로 대체됩니다.
+
+

@@ -1,0 +1,595 @@
+---
+sidebar: sidebar 
+permalink: trident-docker/stor-config.html 
+keywords: deploy, trident, docker, trident for docker, nfs, iscsi, protocol, nfs protocol, iscsi protocol, configure host, host config, storage config, options, variables, ontap, element, storage pool, service type, service level, cloud volumes 
+summary: Trident 구성에 사용할 수 있는 구성 옵션을 확인하세요. 
+---
+= 스토리지 구성 옵션
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident 구성에 사용할 수 있는 구성 옵션을 확인하세요.
+
+
+
+== 전역 구성 옵션
+
+이러한 구성 옵션은 사용 중인 스토리지 플랫폼과 관계없이 모든 Trident 구성에 적용됩니다.
+
+[cols="3*"]
+|===
+| 옵션 | 설명 | 예 
+
+
+| `version`  a| 
+구성 파일 버전 번호
+ a| 
+`1`
+
+
+
+| `storageDriverName`  a| 
+스토리지 드라이버 이름
+ a| 
+`ontap-nas`, `ontap-san`, `ontap-nas-economy`,
+`ontap-nas-flexgroup`, `solidfire-san`
+
+
+
+| `storagePrefix`  a| 
+볼륨 이름에 사용할 수 있는 선택적 접두사입니다. 기본값: `netappdvp_`.
+ a| 
+`staging_`
+
+
+
+| `limitVolumeSize`  a| 
+볼륨 크기에 대한 선택적 제한입니다. 기본값: "" (적용되지 않음)
+ a| 
+`10g`
+
+|===
+
+TIP: Element 백엔드에는 `storagePrefix`(기본값 포함)을 사용하지 마십시오. 기본적으로 `solidfire-san` 드라이버는 이 설정을 무시하고 접두사를 사용하지 않습니다. NetApp에서는 Docker 볼륨 매핑에 특정 tenantID를 사용하거나 이름 변환이 사용된 경우 Docker 버전, 드라이버 정보 및 Docker의 원시 이름으로 채워진 속성 데이터를 사용할 것을 권장합니다.
+
+볼륨을 생성할 때마다 설정을 일일이 지정할 필요 없이 기본 옵션을 사용할 수 있습니다.  `size` 옵션은 모든 컨트롤러 유형에서 사용할 수 있습니다. 기본 볼륨 크기를 설정하는 방법에 대한 예시는 ONTAP 구성 섹션을 참조하십시오.
+
+[cols="3*"]
+|===
+| 옵션 | 설명 | 예 
+
+
+| `size`  a| 
+새 볼륨의 선택적 기본 크기입니다. 기본값: `1G`
+ a| 
+`10G`
+
+|===
+
+
+== ONTAP 구성
+
+위의 전역 구성 값 외에도 ONTAP를 사용할 때 다음과 같은 최상위 옵션을 사용할 수 있습니다.
+
+[cols="3*"]
+|===
+| 옵션 | 설명 | 예 
+
+
+| `managementLIF`  a| 
+ONTAP 관리 LIF의 IP 주소입니다. 정규화된 도메인 이름(FQDN)을 지정할 수 있습니다.
+ a| 
+`10.0.0.1`
+
+
+
+| `dataLIF`  a| 
+프로토콜 LIF의 IP 주소입니다.
+
+*ONTAP NAS 드라이버*: NetApp에서는 `dataLIF`를 지정하는 것을 권장합니다. 지정하지 않으면 Trident는 SVM에서 dataLIF를 가져옵니다. NFS 마운트 작업에 사용할 정규화된 도메인 이름(FQDN)을 지정하여 여러 dataLIF에 걸쳐 로드 밸런싱을 수행하는 라운드 로빈 DNS를 구성할 수 있습니다.
+
+*ONTAP SAN 드라이버*: iSCSI 또는 FC에 대해 지정하지 마십시오. Trident는 link:https://docs.netapp.com/us-en/ontap/san-admin/selective-lun-map-concept.html["ONTAP 선택적 LUN 매핑"^]를 사용하여 다중 경로 세션을 설정하는 데 필요한 iSCSI 또는 FC LIF를 검색합니다.  `dataLIF`가 명시적으로 정의된 경우 경고가 생성됩니다.
+ a| 
+`10.0.0.2`
+
+
+
+| `svm`  a| 
+사용할 스토리지 가상 머신(관리 LIF가 클러스터 LIF인 경우 필수)
+ a| 
+`svm_nfs`
+
+
+
+| `username`  a| 
+스토리지 장치에 연결할 사용자 이름
+ a| 
+`vsadmin`
+
+
+
+| `password`  a| 
+스토리지 장치에 연결하기 위한 암호
+ a| 
+`secret`
+
+
+
+| `aggregate`  a| 
+프로비저닝용 애그리게이트(선택 사항, 설정된 경우 SVM에 할당해야 함).  `ontap-nas-flexgroup` 드라이버의 경우 이 옵션은 무시됩니다. SVM에 할당된 모든 애그리게이트는 FlexGroup 볼륨을 프로비저닝하는 데 사용됩니다.
+ a| 
+`aggr1`
+
+
+
+| `limitAggregateUsage`  a| 
+선택 사항이며, 사용량이 이 비율을 초과하면 프로비저닝이 실패합니다
+ a| 
+`75%`
+
+
+
+| `nfsMountOptions`  a| 
+NFS 마운트 옵션을 세밀하게 제어할 수 있습니다. 기본값은 "-o nfsvers=3"입니다. * `ontap-nas` 및  `ontap-nas-economy` 드라이버에서만 사용 가능합니다*. https://www.netapp.com/pdf.html?item=/media/10720-tr-4067.pdf["NFS 호스트 구성 정보는 여기를 참조하십시오"^]
+ a| 
+`-o nfsvers=4`
+
+
+
+| `igroupName`  a| 
+Trident는 노드별 `igroups`  `netappdvp`로 생성 및 관리합니다.
+
+이 값은 변경하거나 생략할 수 없습니다.
+
+* `ontap-san` 드라이버에만 사용할 수 있습니다*.
+ a| 
+`netappdvp`
+
+
+
+| `limitVolumeSize`  a| 
+최대 요청 가능 볼륨 크기.
+ a| 
+`300g`
+
+
+
+| `qtreesPerFlexvol`  a| 
+FlexVol당 최대 qtree 수는 [50, 300] 범위 내에 있어야 하며 기본값은 200입니다.
+
+* `ontap-nas-economy` 드라이버의 경우, 이 옵션을 사용하면 FlexVol당 최대 qtree 수를 사용자 지정할 수 있습니다*.
+ a| 
+`300`
+
+
+
+ a| 
+`sanType`
+| * `ontap-san` 드라이버에서만 지원됩니다.* iSCSI의 경우  `iscsi`, NVMe/TCP의 경우  `nvme` 또는 Fibre Channel(FC)을 통한 SCSI의 경우  `fcp`를 선택하는 데 사용합니다. | `iscsi` 공백인 경우 
+
+
+| `limitVolumePoolSize` | * `ontap-san-economy` 및  `ontap-san-economy` 드라이버에서만 지원됩니다.* ONTAP ontap-nas-economy 및 ontap-san-economy 드라이버에서 FlexVol 크기를 제한합니다.  a| 
+`300g`
+
+|===
+볼륨을 생성할 때마다 지정할 필요가 없도록 기본 옵션을 사용할 수 있습니다.
+
+[cols="1,3,2"]
+|===
+| 옵션 | 설명 | 예 
+
+
+| `spaceReserve`  a| 
+공간 예약 모드; `none`(씬 프로비저닝) 또는 `volume`(씩 프로비저닝)
+ a| 
+`none`
+
+
+
+| `snapshotPolicy`  a| 
+사용할 스냅샷 정책, 기본값은 `none`
+ a| 
+`none`
+
+
+
+| `snapshotReserve`  a| 
+스냅샷 예약 비율, 기본값은 ""이며 ONTAP 기본값을 수락합니다
+ a| 
+`10`
+
+
+
+| `splitOnClone`  a| 
+생성 시 상위 클론에서 클론을 분할합니다. 기본값은 `false`
+ a| 
+`false`
+
+
+
+| `encryption`  a| 
+새 볼륨에서 NetApp Volume Encryption(NVE)을 활성화합니다. 기본값은 `false`입니다. 이 옵션을 사용하려면 클러스터에서 NVE 라이센스가 있고 활성화되어 있어야 합니다.
+
+백엔드에서 NAE가 활성화된 경우 Trident에서 프로비저닝된 모든 볼륨은 NAE가 활성화됩니다.
+
+자세한 내용은 다음을 참조하십시오. link:../trident-reco/security-reco.html["Trident가 NVE 및 NAE와 작동하는 방식"]
+ a| 
+true
+
+
+
+| `unixPermissions`  a| 
+프로비저닝된 NFS 볼륨에 대한 NAS 옵션, 기본값 `777`
+ a| 
+`777`
+
+
+
+| `snapshotDir`  a| 
+ `.snapshot` 디렉토리에 액세스하기 위한 NAS 옵션.
+ a| 
+ `.snapshot` 디렉터리에 대한 액세스를 활성화 또는 비활성화합니다.
+
+유효값: `true`, `false`. 기본 동작은 ONTAP 및 Trident 버전에 따라 다를 수 있습니다. 일관된 동작을 보장하려면 명시적으로 설정하십시오.
+
+
+
+| `exportPolicy`  a| 
+사용할 NFS 엑스포트 정책에 대한 NAS 옵션, 기본값은 `default`
+ a| 
+`default`
+
+
+
+| `securityStyle`  a| 
+프로비저닝된 NFS 볼륨에 액세스하기 위한 NAS 옵션입니다.
+
+NFS는 `mixed` 및 `unix` 보안 스타일을 지원합니다. 기본값은  `unix`입니다.
+ a| 
+`unix`
+
+
+
+| `fileSystemType`  a| 
+파일 시스템 유형을 선택하는 SAN 옵션, 기본값은 `ext4`
+ a| 
+`xfs`
+
+
+
+| `tieringPolicy`  a| 
+사용할 계층화 정책, 기본값은 `none`입니다.
+ a| 
+`none`
+
+
+
+| `skipRecoveryQueue`  a| 
+볼륨 삭제 시 스토리지의 복구 큐를 건너뛰고 볼륨을 즉시 삭제합니다.
+ a| 
+``
+
+|===
+
+
+=== 확장 옵션
+
+ `ontap-nas` 및 `ontap-san` 드라이버는 각 Docker 볼륨에 대해 ONTAP FlexVol을 생성합니다. ONTAP는 클러스터 노드당 최대 1,000개의 FlexVols를 지원하며 클러스터 최대 12,000개의 FlexVol 볼륨을 지원합니다. Docker 볼륨 요구 사항이 이 제한 내에 있는 경우 `ontap-nas` 드라이버는 Docker 볼륨 단위 스냅샷 및 클론 생성과 같은 FlexVols에서 제공하는 추가 기능으로 인해 선호되는 NAS 솔루션입니다.
+
+FlexVol 제한으로 수용할 수 있는 것보다 더 많은 Docker 볼륨이 필요한 경우  `ontap-nas-economy` 또는  `ontap-san-economy` 드라이버를 선택하십시오.
+
+ `ontap-nas-economy` 드라이버는 자동으로 관리되는 FlexVol 볼륨 풀 내에서 ONTAP Qtree로 Docker 볼륨을 생성합니다. Qtree는 클러스터 노드당 최대 100,000개, 클러스터당 최대 2,400,000개까지 훨씬 더 큰 확장성을 제공하지만 일부 기능이 제한됩니다.  `ontap-nas-economy` 드라이버는 Docker 볼륨 단위의 스냅샷 또는 클론 생성을 지원하지 않습니다.
+
+
+NOTE:  `ontap-nas-economy` 드라이버는 Docker Swarm이 여러 노드에 걸쳐 볼륨 생성을 조정하지 않기 때문에 현재 Docker Swarm에서 지원되지 않습니다.
+
+ `ontap-san-economy` 드라이버는 자동으로 관리되는 FlexVol 볼륨의 공유 풀 내에서 Docker 볼륨을 ONTAP LUN으로 생성합니다. 이러한 방식으로 각 FlexVol은 하나의 LUN으로만 제한되지 않으며 SAN 워크로드에 더 나은 확장성을 제공합니다. 스토리지 어레이에 따라 ONTAP는 클러스터당 최대 16384개의 LUN을 지원합니다. 볼륨이 내부적으로 LUN이기 때문에 이 드라이버는 Docker 볼륨 단위의 스냅샷 및 클론 생성을 지원합니다.
+
+ `ontap-nas-flexgroup` 드라이버를 선택하여 수십억 개의 파일로 페타바이트 범위까지 확장할 수 있는 단일 볼륨에 대한 병렬 처리를 향상시키십시오. FlexGroups의 이상적인 사용 사례로는 AI/ML/DL, 빅 데이터 및 분석, 소프트웨어 빌드, 스트리밍, 파일 리포지토리 등이 있습니다. Trident는 FlexGroup 볼륨을 프로비저닝할 때 SVM에 할당된 모든 애그리게이트를 사용합니다. Trident의 FlexGroup 지원에는 다음과 같은 고려 사항도 있습니다.
+
+* ONTAP 버전 9.2 이상이 필요합니다.
+* 현재(작성 시점 기준) FlexGroups는 NFS v3만 지원합니다.
+* SVM에 대해 64비트 NFSv3 식별자를 활성화하는 것이 좋습니다.
+* 최소 권장 FlexGroup 멤버/볼륨 크기는 100GiB입니다.
+* FlexGroup 볼륨은 복제가 지원되지 않습니다.
+
+
+FlexGroups 및 FlexGroups에 적합한 워크로드에 대한 자세한 내용은 https://www.netapp.com/pdf.html?item=/media/12385-tr4571.pdf["NetApp FlexGroup 볼륨 모범 사례 및 구현 가이드"^]을 참조하십시오.
+
+고급 기능과 대규모 확장성을 동일한 환경에서 구현하려면 Docker Volume Plugin의 여러 인스턴스를 실행할 수 있습니다. 하나는 `ontap-nas`을 사용하고 다른 하나는 `ontap-nas-economy`을 사용합니다.
+
+
+
+=== Trident용 사용자 지정 ONTAP 역할
+
+Trident에서 작업을 수행하기 위해 ONTAP 관리자 역할을 사용할 필요가 없도록 최소 권한으로 ONTAP 클러스터 역할을 생성할 수 있습니다. Trident 백엔드 구성에 사용자 이름을 포함하면 Trident는 생성한 ONTAP 클러스터 역할을 사용하여 작업을 수행합니다.
+
+Trident 사용자 지정 역할 생성에 대한 자세한 내용은 link:https://github.com/NetApp/trident/tree/master/contrib/ontap/trident_role["Trident 사용자 지정 역할 생성기"]을 참조하십시오.
+
+[role="tabbed-block"]
+====
+.ONTAP CLI 사용
+--
+. 다음 명령을 사용하여 새 역할을 생성합니다.
++
+`security login role create <role_name\> -cmddirname "command" -access all -vserver <svm_name\>`
+
+. Trident 사용자의 사용자 이름을 생성합니다.
++
+`security login create -username <user_name\> -application ontapi -authmethod password -role <name_of_role_in_step_1\> -vserver <svm_name\> -comment "user_description"`
+`security login create -username <user_name\> -application http -authmethod password -role <name_of_role_in_step_1\> -vserver <svm_name\> -comment "user_description"`
+
+. 사용자에게 역할 매핑:
++
+`security login modify username <user_name\> -vserver <svm_name\> -role <role_name\> -application ontapi -application console -authmethod <password\>`
+
+
+
+--
+.System Manager 사용
+--
+ONTAP System Manager에서 다음 단계를 수행하십시오.
+
+. *사용자 지정 역할 생성*:
++
+.. 클러스터 수준에서 사용자 지정 역할을 생성하려면 * Cluster > Settings * 를 선택합니다.
++
+(또는) SVM 수준에서 사용자 지정 역할을 생성하려면 *스토리지 > 스토리지 VM > `required SVM`> 설정 > 사용자 및 역할*을 선택하십시오.
+
+.. *사용자 및 역할* 옆에 있는 화살표 아이콘(*->*)을 선택합니다.
+.. *역할* 에서 *+추가* 를 선택합니다.
+.. 역할에 대한 규칙을 정의하고 *저장*을 클릭합니다.
+
+
+. *Trident 사용자에게 역할 매핑*: + *사용자 및 역할* 페이지에서 다음 단계를 수행합니다.
++
+.. *사용자* 아래에서 추가 아이콘 *+*를 선택합니다.
+.. 필요한 사용자 이름을 선택하고 *역할* 드롭다운 메뉴에서 역할을 선택합니다.
+.. *저장*을 클릭합니다.
+
+
+
+
+--
+====
+자세한 내용은 다음 페이지를 참조하십시오.
+
+* link:https://kb.netapp.com/on-prem/ontap/Ontap_OS/OS-KBs/FAQ__Custom_roles_for_administration_of_ONTAP["ONTAP 관리를 위한 사용자 지정 역할"^] 또는 link:https://docs.netapp.com/us-en/ontap/authentication/define-custom-roles-task.html["사용자 지정 역할 정의"^]
+* link:https://docs.netapp.com/us-en/ontap-automation/rest/rbac_roles_users.html#rest-api["역할 및 사용자 작업"^]
+
+
+
+
+=== ONTAP 구성 파일의 예
+
+.<code>ontap-nas</code> 드라이버의 NFS 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "ontap-nas",
+  "managementLIF": "10.0.0.1",
+  "dataLIF": "10.0.0.2",
+  "svm": "svm_nfs",
+  "username": "vsadmin",
+  "password": "password",
+  "aggregate": "aggr1",
+  "defaults": {
+    "size": "10G",
+    "spaceReserve": "none",
+    "exportPolicy": "default"
+  }
+}
+----
+====
+.<code>ontap-nas-flexgroup</code> 드라이버의 NFS 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "ontap-nas-flexgroup",
+  "managementLIF": "10.0.0.1",
+  "dataLIF": "10.0.0.2",
+  "svm": "svm_nfs",
+  "username": "vsadmin",
+  "password": "password",
+  "defaults": {
+    "size": "100G",
+    "spaceReserve": "none",
+    "exportPolicy": "default"
+  }
+}
+----
+====
+.<code>ontap-nas-economy</code> 드라이버의 NFS 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "ontap-nas-economy",
+  "managementLIF": "10.0.0.1",
+  "dataLIF": "10.0.0.2",
+  "svm": "svm_nfs",
+  "username": "vsadmin",
+  "password": "password",
+  "aggregate": "aggr1"
+}
+----
+====
+.<code>ontap-san</code> 드라이버의 iSCSI 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "ontap-san",
+  "managementLIF": "10.0.0.1",
+  "dataLIF": "10.0.0.3",
+  "svm": "svm_iscsi",
+  "username": "vsadmin",
+  "password": "password",
+  "aggregate": "aggr1",
+  "igroupName": "netappdvp"
+}
+----
+====
+.<code>ontap-san-economy</code> 드라이버의 NFS 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "ontap-san-economy",
+  "managementLIF": "10.0.0.1",
+  "dataLIF": "10.0.0.3",
+  "svm": "svm_iscsi_eco",
+  "username": "vsadmin",
+  "password": "password",
+  "aggregate": "aggr1",
+  "igroupName": "netappdvp"
+}
+----
+====
+.<code>ontap-san</code> 드라이버의 NVMe/TCP 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "backendName": "NVMeBackend",
+  "storageDriverName": "ontap-san",
+  "managementLIF": "10.0.0.1",
+  "svm": "svm_nvme",
+  "username": "vsadmin",
+  "password": "password",
+  "sanType": "nvme",
+  "useREST": true
+}
+----
+====
+.<code>ontap-san</code> 드라이버의 FC 기반 SCSI 예
+[%collapsible]
+====
+[source, json]
+----
+{
+  "version": 1,
+  "backendName": "ontap-san-backend",
+  "storageDriverName": "ontap-san",
+  "managementLIF": "10.0.0.1",
+  "sanType": "fcp",
+  "svm": "trident_svm",
+  "username": "vsadmin",
+  "password": "password",
+  "useREST": true
+}
+----
+====
+
+
+== Element 소프트웨어 구성
+
+전역 구성 값 외에도 Element 소프트웨어(NetApp HCI/SolidFire)를 사용할 때 다음과 같은 옵션을 사용할 수 있습니다.
+
+[cols="3*"]
+|===
+| 옵션 | 설명 | 예 
+
+
+| `Endpoint`  a| 
+\https://<login>:<password>@<mvip>/json-rpc/<element-version>
+ a| 
+\https://admin:admin@192.168.160.3/json-rpc/8.0
+
+
+
+| `SVIP`  a| 
+iSCSI IP 주소 및 포트
+ a| 
+10.0.0.7:3260
+
+
+
+| `TenantName`  a| 
+사용할 SolidFire 테넌트(찾을 수 없으면 생성됨)
+ a| 
+`docker`
+
+
+
+| `InitiatorIFace`  a| 
+iSCSI 트래픽을 기본이 아닌 인터페이스로 제한할 때 인터페이스를 지정합니다
+ a| 
+`default`
+
+
+
+| `Types`  a| 
+QoS 사양
+ a| 
+아래 예를 참조하십시오
+
+
+
+| `LegacyNamePrefix`  a| 
+업그레이드된 Trident 설치에 사용되는 접두사입니다. 1.3.2 이전 버전의 Trident를 사용했고 기존 볼륨으로 업그레이드를 수행하는 경우 volume-name 방법을 통해 매핑된 이전 볼륨에 액세스하려면 이 값을 설정해야 합니다.
+ a| 
+`netappdvp-`
+
+|===
+ `solidfire-san` 드라이버는 Docker Swarm을 지원하지 않습니다.
+
+
+
+=== Element 소프트웨어 구성 파일의 예
+
+[source, json]
+----
+{
+  "version": 1,
+  "storageDriverName": "solidfire-san",
+  "Endpoint": "https://admin:admin@192.168.160.3/json-rpc/8.0",
+  "SVIP": "10.0.0.7:3260",
+  "TenantName": "docker",
+  "InitiatorIFace": "default",
+  "Types": [
+    {
+      "Type": "Bronze",
+      "Qos": {
+        "minIOPS": 1000,
+        "maxIOPS": 2000,
+        "burstIOPS": 4000
+      }
+    },
+    {
+      "Type": "Silver",
+      "Qos": {
+        "minIOPS": 4000,
+        "maxIOPS": 6000,
+        "burstIOPS": 8000
+      }
+    },
+    {
+      "Type": "Gold",
+      "Qos": {
+        "minIOPS": 6000,
+        "maxIOPS": 8000,
+        "burstIOPS": 10000
+      }
+    }
+  ]
+}
+----

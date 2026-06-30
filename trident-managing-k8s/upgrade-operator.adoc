@@ -1,0 +1,182 @@
+---
+sidebar: sidebar 
+permalink: trident-managing-k8s/upgrade-operator.html 
+keywords: upgrade, trident, methods, operator, tridentctl, helm 
+summary: 운영자를 사용하여 기존 Trident 설치를 쉽게 업그레이드할 수 있습니다. 
+---
+= Trident Operator 또는 Helm을 사용하여 Trident 설치를 업그레이드하세요
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident 운영자를 사용하여 수동으로 또는 Helm을 통해 Trident를 업그레이드할 수 있습니다. Trident 운영자 설치에서 다른 Trident 운영자 설치로 업그레이드하거나  `tridentctl` 설치에서 Trident 운영자 버전으로 업그레이드할 수 있습니다. Trident 운영자 설치를 업그레이드하기 전에 link:upgrade-trident.html#step-3-select-an-upgrade-method["업그레이드 방법을 선택하세요"]를 검토하십시오.
+
+
+
+== 수동 설치 업그레이드
+
+클러스터 범위 Trident 운영자 설치에서 다른 클러스터 범위 Trident 운영자 설치로 업그레이드할 수 있습니다. 모든 Trident 버전은 클러스터 범위 운영자를 사용합니다.
+
+
+NOTE: 네임스페이스 범위 연산자를 사용하여 설치된 Trident(버전 20.07~20.10)에서 업그레이드하려면 link:../earlier-versions.html["설치된 버전"] Trident의 업그레이드 지침을 사용하십시오.
+
+.이 작업 정보
+Trident는 Kubernetes 버전에 맞는 오퍼레이터를 설치하고 관련 객체를 생성하는 데 사용할 수 있는 번들 파일을 제공합니다.
+
+* Kubernetes 1.25 이상 버전을 실행하는 클러스터의 경우 link:https://github.com/NetApp/trident/tree/stable/v25.02/deploy/bundle_post_1_25.yaml["bundle_post_1_25.yaml"^]를 사용하십시오.
+
+
+.시작하기 전에
+link:../trident-get-started/requirements.html["지원되는 Kubernetes 버전"]을(를) 실행하는 Kubernetes 클러스터를 사용하고 있는지 확인하십시오.
+
+.단계
+. Trident 버전을 확인하세요:
++
+[listing]
+----
+./tridentctl -n trident version
+----
+.  `operator.yaml`,  `tridentorchestrator_cr.yaml`,  `post_1_25_bundle.yaml`를 업그레이드할 버전(예: 25.06)에 맞는 레지스트리 및 이미지 경로와 올바른 시크릿으로 업데이트하십시오.
+. 현재 Trident 인스턴스를 설치하는 데 사용된 Trident 오퍼레이터를 삭제하십시오. 예를 들어 25.02에서 업그레이드하는 경우 다음 명령을 실행하십시오.
++
+[listing]
+----
+kubectl delete -f 25.02.0/trident-installer/deploy/<bundle.yaml> -n trident
+----
+.  `TridentOrchestrator` 속성을 사용하여 초기 설치를 사용자 지정한 경우  `TridentOrchestrator` 객체를 편집하여 설치 매개 변수를 수정할 수 있습니다. 여기에는 오프라인 모드용 미러링된 Trident 및 CSI 이미지 레지스트리 지정, 디버그 로그 활성화 또는 이미지 풀 시크릿 지정을 위한 변경 사항이 포함될 수 있습니다.
+. Kubernetes 버전에 따라 _<bundle.yaml>_가 
+`bundle_pre_1_25.yaml` 또는  `bundle_post_1_25.yaml`인 환경에 맞는 번들 YAML 파일을 사용하여 Trident를 설치합니다. 예를 들어 Trident 25.06.0을 설치하는 경우 다음 명령을 실행합니다.
++
+[listing]
+----
+kubectl create -f 25.06.0/trident-installer/deploy/<bundle.yaml> -n trident
+----
+. Trident torc를 수정하여 이미지 25.06.0을 포함시키세요.
+
+
+
+
+== Helm 설치 업그레이드
+
+Trident Helm 설치를 업그레이드할 수 있습니다.
+
+
+WARNING: Trident가 설치된 Kubernetes 클러스터를 1.24에서 1.25 이상 버전으로 업그레이드할 때는 클러스터를 업그레이드하기 전에 values.yaml을 업데이트하여  `excludePodSecurityPolicy`을  `true`로 설정하거나  `--set excludePodSecurityPolicy=true`을  `helm upgrade` 명령에 추가해야 합니다.
+
+Kubernetes 클러스터를 1.24에서 1.25로 업그레이드했지만 Trident helm을 업그레이드하지 않은 경우 helm 업그레이드가 실패합니다. helm 업그레이드를 성공적으로 완료하려면 다음 단계를 사전 수행해야 합니다.
+
+.  https://github.com/helm/helm-mapkubeapis[]에서 helm-mapkubeapis 플러그인을 설치합니다.
+. Trident가 설치된 네임스페이스에서 Trident 릴리스에 대한 사전 실행(dry run)을 수행합니다. 이렇게 하면 정리될 리소스 목록이 표시됩니다.
++
+[listing]
+----
+helm mapkubeapis --dry-run trident  --namespace trident
+----
+. 정리 작업을 위해 helm을 사용하여 전체 실행을 수행하십시오.
++
+[listing]
+----
+helm mapkubeapis trident  --namespace trident
+----
+
+
+.단계
+. link:../trident-install/kubernetes-deploy-helm.html#deploy-the-trident-operator-and-install-trident-using-helm["Helm을 사용하여 Trident를 설치했습니다"]한 경우  `helm upgrade trident netapp-trident/trident-operator --version 100.2602.0`를 사용하여 한 단계로 업그레이드할 수 있습니다. Helm 리포지토리를 추가하지 않았거나 업그레이드에 사용할 수 없는 경우:
++
+.. 최신 Trident 릴리스를 link:https://github.com/NetApp/trident/releases/latest["GitHub의 _Assets_ 섹션"^]에서 다운로드하십시오.
+..  `helm upgrade` 명령을 사용합니다. 여기서  `trident-operator-26.02.0.tgz`는 업그레이드할 버전을 나타냅니다.
++
+[listing]
+----
+helm upgrade <name> trident-operator-26.02.0.tgz
+----
++
+
+NOTE: 초기 설치 중에 사용자 지정 옵션(예: Trident 및 CSI 이미지에 대한 개인 미러링 레지스트리 지정)을 설정한 경우 `helm upgrade` 명령을  `--set`를 사용하여 추가하여 해당 옵션이 업그레이드 명령에 포함되도록 해야 합니다. 그렇지 않으면 값이 기본값으로 재설정됩니다.
+
+
+
+.  `helm list`을 실행하여 차트와 앱 버전이 모두 업그레이드되었는지 확인합니다.  `tridentctl logs`를 실행하여 디버그 메시지를 검토합니다.
+
+
+
+
+==  `tridentctl` 설치에서 Trident operator로 업그레이드
+
+ `tridentctl` 설치에서 Trident 운영자의 최신 릴리스로 업그레이드할 수 있습니다. 기존 백엔드와 PVC는 자동으로 사용할 수 있습니다.
+
+
+NOTE: 설치 방법을 전환하기 전에 link:../trident-install/kubernetes-deploy.html#moving-between-installation-methods["설치 방법 간 이동"]을(를) 검토하십시오.
+
+.단계
+. 최신 Trident 릴리스를 다운로드하세요.
++
+[listing]
+----
+# Download the release required [26.02.0]
+mkdir 26.02.0
+cd 26.02.0
+wget https://github.com/NetApp/trident/releases/download/v26.02.0/trident-installer-26.02.0.tar.gz
+tar -xf trident-installer-26.02.0.tar.gz
+cd trident-installer
+----
+. 매니페스트에서 `tridentorchestrator` CRD를 생성합니다.
++
+[listing]
+----
+kubectl create -f deploy/crds/trident.netapp.io_tridentorchestrators_crd_post1.16.yaml
+----
+. 클러스터 범위 오퍼레이터를 동일한 네임스페이스에 배포합니다.
++
+[listing]
+----
+kubectl create -f deploy/<bundle-name.yaml>
+
+serviceaccount/trident-operator created
+clusterrole.rbac.authorization.k8s.io/trident-operator created
+clusterrolebinding.rbac.authorization.k8s.io/trident-operator created
+deployment.apps/trident-operator created
+podsecuritypolicy.policy/tridentoperatorpods created
+
+#Examine the pods in the Trident namespace
+NAME                                  READY   STATUS    RESTARTS   AGE
+trident-controller-79df798bdc-m79dc   6/6     Running   0          150d
+trident-node-linux-xrst8              2/2     Running   0          150d
+trident-operator-5574dbbc68-nthjv     1/1     Running   0          1m30s
+----
+. Trident 설치를 위한 `TridentOrchestrator` CR을 생성합니다.
++
+[listing]
+----
+cat deploy/crds/tridentorchestrator_cr.yaml
+apiVersion: trident.netapp.io/v1
+kind: TridentOrchestrator
+metadata:
+  name: trident
+spec:
+  debug: true
+  namespace: trident
+
+kubectl create -f deploy/crds/tridentorchestrator_cr.yaml
+
+#Examine the pods in the Trident namespace
+NAME                                READY   STATUS    RESTARTS   AGE
+trident-csi-79df798bdc-m79dc        6/6     Running   0          1m
+trident-csi-xrst8                   2/2     Running   0          1m
+trident-operator-5574dbbc68-nthjv   1/1     Running   0          5m41s
+----
+. Trident가 의도한 버전으로 업그레이드되었는지 확인하십시오.
++
+[listing]
+----
+kubectl describe torc trident | grep Message -A 3
+
+Message:                Trident installed
+Namespace:              trident
+Status:                 Installed
+Version:                v26.02.0
+----
+

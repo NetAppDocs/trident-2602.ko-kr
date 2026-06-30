@@ -1,0 +1,106 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-generate-support-bundle.html 
+keywords: trident, protect, bundle, support, netapp, custom, resource, file 
+summary: 'Trident Protect를 사용하면 관리자가 관리 중인 클러스터 및 애플리케이션에 대한 로그, 메트릭 및 토폴로지 정보를 포함하여 NetApp 지원에 유용한 정보가 담긴 번들을 생성할 수 있습니다. 인터넷에 연결되어 있는 경우 사용자 지정 리소스(CR) 파일을 사용하여 지원 번들을 NetApp Support Site(NSS)에 업로드할 수 있습니다.' 
+---
+= Trident Protect 지원 번들을 생성합니다
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident Protect를 사용하면 관리자가 관리 중인 클러스터 및 애플리케이션에 대한 로그, 메트릭 및 토폴로지 정보를 포함하여 NetApp 지원에 유용한 정보가 담긴 번들을 생성할 수 있습니다. 인터넷에 연결되어 있는 경우 사용자 지정 리소스(CR) 파일을 사용하여 지원 번들을 NetApp 지원 사이트(NSS)에 업로드할 수 있습니다.
+
+[role="tabbed-block"]
+====
+.CR을 사용하여 지원 번들을 생성합니다
+--
+.단계
+. 사용자 정의 리소스(CR) 파일을 생성하고 이름을 지정합니다(예: `trident-protect-support-bundle.yaml`).
+. 다음 속성을 구성하십시오.
++
+** *metadata.name*: (_필수_) 이 사용자 지정 리소스의 이름입니다. 환경에 맞는 고유하고 적절한 이름을 선택하세요.
+** *spec.triggerType*: (_필수_) 지원 번들이 즉시 생성될지, 아니면 예약될지를 결정합니다. 예약된 번들 생성은 UTC 기준 오전 12시에 발생합니다. 가능한 값:
++
+*** 예약됨
+*** 수동
+
+
+** *spec.uploadEnabled*: (_선택 사항_) 지원 번들을 생성한 후 NetApp Support Site에 업로드할지 여부를 제어합니다. 지정하지 않으면 기본값은 `false`입니다. 가능한 값:
++
+*** true
+*** false(기본값)
+
+
+** *spec.dataWindowStart*: (_선택 사항_) 지원 번들에 포함된 데이터 기간이 시작되는 날짜 및 시간을 지정하는 RFC 3339 형식의 날짜 문자열입니다. 지정하지 않으면 기본값은 24시간 전입니다. 지정할 수 있는 가장 빠른 기간 시작 날짜는 7일 전입니다.
++
+YAML 예:
+
++
+[source, yaml]
+----
+---
+apiVersion: protect.trident.netapp.io/v1
+kind: AutoSupportBundle
+metadata:
+  name: trident-protect-support-bundle
+spec:
+  triggerType: Manual
+  uploadEnabled: true
+  dataWindowStart: 2024-05-05T12:30:00Z
+----
+
+
+.  `trident-protect-support-bundle.yaml` 파일에 올바른 값을 입력한 후 CR을 적용하십시오.
++
+[source, console]
+----
+kubectl apply -f trident-protect-support-bundle.yaml -n trident-protect
+----
+
+
+--
+.CLI를 사용하여 지원 번들 생성
+--
+.단계
+. 지원 번들을 생성하려면 괄호 안의 값을 사용자 환경 정보로 바꾸십시오.  `trigger-type`은 번들이 즉시 생성되는지 아니면 예약된 시간에 생성되는지를 결정하며,  `Manual` 또는  `Scheduled`일 수 있습니다. 기본 설정은  `Manual`입니다.
++
+예를 들면 다음과 같습니다.
+
++
+[source, console]
+----
+tridentctl-protect create autosupportbundle <my-bundle-name> --trigger-type <trigger-type> -n trident-protect
+----
+
+
+--
+====
+
+
+== 지원 번들을 모니터링하고 검색합니다
+
+두 가지 방법 중 하나를 사용하여 지원 번들을 생성한 후에는 생성 진행 상황을 모니터링하고 로컬 시스템으로 가져올 수 있습니다.
+
+.단계
+.  `status.generationState`이(가)  `Completed` 상태에 도달할 때까지 기다립니다. 다음 명령을 사용하여 생성 진행 상황을 모니터링할 수 있습니다.
++
+[source, console]
+----
+kubectl get autosupportbundle trident-protect-support-bundle -n trident-protect
+----
+. 지원 번들을 로컬 시스템으로 가져옵니다. 완료된 AutoSupport 번들에서 복사 명령을 가져옵니다.
++
+[source, console]
+----
+kubectl describe autosupportbundle trident-protect-support-bundle -n trident-protect
+----
++
+출력에서 `kubectl cp` 명령을 찾아 실행하되, 대상 인수를 원하는 로컬 디렉터리로 바꾸십시오.
+
+

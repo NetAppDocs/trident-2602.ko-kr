@@ -1,0 +1,79 @@
+---
+sidebar: sidebar 
+permalink: trident-use/backend_ops_kubectl.html 
+keywords: backends, storage system, anf, element, hci, solidfire, ontap, aff, fas, ontap select, configure backends, kubectl, create backends, delete backends, update backends, view backends 
+summary: ' `kubectl`를 사용하여 백엔드 관리 작업을 수행하는 방법에 대해 알아보십시오.' 
+---
+= kubectl을 사용하여 백엔드 관리를 수행합니다
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+ `kubectl`를 사용하여 백엔드 관리 작업을 수행하는 방법에 대해 알아보십시오.
+
+
+
+== 백엔드를 삭제합니다
+
+ `TridentBackendConfig`를 삭제하면 Trident에 백엔드를 삭제/유지하도록( `deletionPolicy`에 따라) 지시하는 것입니다. 백엔드를 삭제하려면  `deletionPolicy`가 delete로 설정되어 있는지 확인하십시오.  `TridentBackendConfig`만 삭제하려면  `deletionPolicy`가 retain으로 설정되어 있는지 확인하십시오. 이렇게 하면 백엔드가 계속 존재하며  `tridentctl`를 사용하여 관리할 수 있습니다.
+
+다음 명령을 실행합니다.
+
+[listing]
+----
+kubectl delete tbc <tbc-name> -n trident
+----
+Trident는 `TridentBackendConfig`에서 사용 중인 Kubernetes Secret을 삭제하지 않습니다. Kubernetes 사용자가 Secret 정리를 담당합니다. Secret을 삭제할 때는 주의해야 합니다. 백엔드에서 사용하지 않는 Secret만 삭제해야 합니다.
+
+
+
+== 기존 백엔드 보기
+
+다음 명령을 실행합니다.
+
+[listing]
+----
+kubectl get tbc -n trident
+----
+ `tridentctl get backend -n trident` 또는  `tridentctl get backend -o yaml -n trident`를 실행하여 존재하는 모든 백엔드 목록을 얻을 수도 있습니다. 이 목록에는  `tridentctl`로 생성된 백엔드도 포함됩니다.
+
+
+
+== 백엔드 업데이트
+
+백엔드를 업데이트해야 하는 이유는 여러 가지가 있을 수 있습니다.
+
+* 스토리지 시스템에 대한 자격 증명이 변경되었습니다. 자격 증명을 업데이트하려면  `TridentBackendConfig` 객체에 사용되는 Kubernetes Secret을 업데이트해야 합니다. Trident는 제공된 최신 자격 증명으로 백엔드를 자동으로 업데이트합니다. 다음 명령을 실행하여 Kubernetes Secret을 업데이트하십시오.
++
+[listing]
+----
+kubectl apply -f <updated-secret-file.yaml> -n trident
+----
+* 매개변수(예: 사용 중인 ONTAP SVM의 이름)를 업데이트해야 합니다.
++
+** 다음 명령을 사용하여 Kubernetes를 통해  `TridentBackendConfig` 객체를 직접 업데이트할 수 있습니다.
++
+[listing]
+----
+kubectl apply -f <updated-backend-file.yaml>
+----
+** 또는 다음 명령을 사용하여 기존  `TridentBackendConfig` CR을 변경할 수 있습니다.
++
+[listing]
+----
+kubectl edit tbc <tbc-name> -n trident
+----
+
+
+
+
+[NOTE]
+====
+* 백엔드 업데이트가 실패하면 백엔드는 마지막으로 알려진 구성을 계속 유지합니다. 로그를 확인하여 원인을 파악하려면  `kubectl get tbc <tbc-name> -o yaml -n trident` 또는  `kubectl describe tbc <tbc-name> -n trident`을 실행하십시오.
+* 구성 파일의 문제를 식별하고 수정한 후 업데이트 명령을 다시 실행할 수 있습니다.
+
+
+====

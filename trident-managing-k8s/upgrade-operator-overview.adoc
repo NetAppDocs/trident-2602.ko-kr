@@ -1,0 +1,57 @@
+---
+sidebar: sidebar 
+permalink: trident-managing-k8s/upgrade-operator-overview.html 
+keywords: upgrade, trident, operator, helm, controller, daemonset, node pods, rolling upgrade, zero downtime 
+summary: Trident 오퍼레이터를 사용하여 Trident를 업그레이드하기 전에 업그레이드 중에 발생하는 백그라운드 프로세스를 이해해야 합니다. 여기에는 롤링 업데이트를 가능하게 하는 Trident 컨트롤러, 컨트롤러 Pod 및 노드 Pod, 노드 DaemonSet의 변경 사항이 포함됩니다. 
+---
+= 운영자 업그레이드 워크플로 이해
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Trident 오퍼레이터를 사용하여 Trident를 업그레이드하기 전에 업그레이드 중에 발생하는 백그라운드 프로세스를 이해해야 합니다. 여기에는 롤링 업데이트를 가능하게 하는 Trident 컨트롤러, 컨트롤러 Pod 및 노드 Pod, 노드 DaemonSet의 변경 사항이 포함됩니다.
+
+
+
+== Trident 운영자 업그레이드 처리
+
+Trident를 설치 및 업그레이드하는 많은 link:../trident-install/kubernetes-deploy.html["Trident 운영자 사용의 이점"] 중 하나는 기존에 마운트된 볼륨에 영향을 주지 않고 Trident 및 Kubernetes 객체를 자동으로 처리한다는 점입니다. 이러한 방식으로 Trident는 다운타임 없이 업그레이드를 지원할 수 있습니다(link:https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/["_롤링 업데이트_"^]). 특히, Trident 오퍼레이터는 다음을 위해 Kubernetes 클러스터와 통신합니다.
+
+* Trident Controller 배포 및 노드 DaemonSet을 삭제하고 다시 생성합니다.
+* Trident Controller Pod와 Trident Node Pod를 새 버전으로 교체하십시오.
++
+** 노드가 업데이트되지 않더라도 나머지 노드의 업데이트가 차단되지 않습니다.
+** 실행 중인 Trident Node Pod가 있는 노드만 볼륨을 마운트할 수 있습니다.
+
+
+
+
+
+TIP: Kubernetes 클러스터의 Trident 아키텍처에 대한 자세한 내용은 link:../trident-get-started/architecture.html["Trident 아키텍처"^]을 참조하십시오.
+
+
+
+== Operator 업그레이드 워크플로
+
+Trident 운영자를 사용하여 업그레이드를 시작할 때:
+
+. *Trident 운영자*:
++
+.. 현재 설치된 Trident 버전(_n_)을 감지합니다.
+.. CRD, RBAC 및 Trident SVC를 포함한 모든 Kubernetes 객체를 업데이트합니다.
+.. 버전 _n_에 대한 Trident Controller 배포를 삭제합니다.
+.. 버전 _n+1_에 대한 Trident Controller 배포를 생성합니다.
+
+
+. *Kubernetes*는 _n+1_에 대한 Trident Controller Pod를 생성합니다.
+. *Trident 운영자*:
++
+.. _n_에 대한 Trident 노드 DaemonSet을 삭제합니다. 운영자는 노드 Pod 종료를 기다리지 않습니다.
+.. _n+1_에 대한 Trident 노드 데몬셋을 생성합니다.
+
+
+. *Kubernetes*는 Trident Node Pod _n_이 실행 중이지 않은 노드에 Trident Node Pod을 생성합니다. 이를 통해 노드에는 어떤 버전이든 Trident Node Pod이 두 개 이상 존재하지 않게 됩니다.
+

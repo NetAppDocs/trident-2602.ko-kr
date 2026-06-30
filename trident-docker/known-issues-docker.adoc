@@ -1,0 +1,64 @@
+---
+sidebar: sidebar 
+permalink: trident-docker/known-issues-docker.html 
+keywords: known issues, trident, trident for docker, docker 
+summary: Docker와 함께 Trident를 사용할 때 발생하는 알려진 문제에 대한 정보를 찾아보세요. 
+---
+= 알려진 문제 및 제한 사항
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Docker와 함께 Trident를 사용할 때 발생하는 알려진 문제 및 제한 사항에 대한 정보를 찾아보세요.
+
+
+
+== Trident Docker Volume Plugin을 이전 버전에서 20.10 이상 버전으로 업그레이드하면 no such file or directory 오류와 함께 업그레이드가 실패합니다.
+
+.해결 방법
+. 플러그인을 비활성화합니다.
++
+[source, console]
+----
+docker plugin disable -f netapp:latest
+----
+. 플러그인을 제거합니다.
++
+[source, console]
+----
+docker plugin rm -f netapp:latest
+----
+. 추가 `config` 매개변수를 제공하여 플러그인을 다시 설치하십시오.
++
+[source, console]
+----
+docker plugin install netapp/trident-plugin:20.10 --alias netapp --grant-all-permissions config=config.json
+----
+
+
+
+
+== 볼륨 이름은 최소 2자 이상이어야 합니다.
+
+
+NOTE: 이는 Docker 클라이언트의 제한 사항입니다. 클라이언트는 한 글자로 된 이름을 Windows 경로로 해석합니다 https://github.com/moby/moby/issues/25773["버그 25773을 참조하십시오"^].
+
+
+
+== Docker Swarm에는 Trident가 모든 스토리지 및 드라이버 조합에서 이를 지원하지 못하도록 하는 특정 동작이 있습니다.
+
+* Docker Swarm은 현재 고유 볼륨 식별자로 볼륨 ID 대신 볼륨 이름을 사용합니다.
+* 볼륨 요청은 Swarm 클러스터의 각 노드로 동시에 전송됩니다.
+* 볼륨 플러그인(Trident 포함)은 Swarm 클러스터의 각 노드에서 독립적으로 실행되어야 합니다. ONTAP 작동 방식과  `ontap-nas` 및  `ontap-san` 드라이버의 기능 특성상, 이러한 제약 조건 내에서 작동할 수 있는 플러그인은 해당 드라이버뿐입니다.
+
+
+나머지 드라이버는 경쟁 조건과 같은 문제에 직면할 수 있으며, 이로 인해 명확한 "승자" 없이 단일 요청에 대해 다수의 볼륨이 생성될 수 있습니다. 예를 들어 Element에는 볼륨이 동일한 이름을 갖지만 서로 다른 ID를 가질 수 있도록 하는 기능이 있습니다.
+
+NetApp은 Docker 팀에 피드백을 제공했지만 향후 조치에 대한 표시는 없습니다.
+
+
+
+== FlexGroup이 프로비저닝되는 동안 ONTAP는 두 번째 FlexGroup이 프로비저닝 중인 FlexGroup과 하나 이상의 애그리게이트를 공유하는 경우 두 번째 FlexGroup을 프로비저닝하지 않습니다.

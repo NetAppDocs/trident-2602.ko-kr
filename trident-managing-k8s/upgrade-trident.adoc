@@ -1,0 +1,84 @@
+---
+sidebar: sidebar 
+permalink: trident-managing-k8s/upgrade-trident.html 
+keywords: upgrade, trident, methods, operator, tridentctl, helm 
+summary: Trident는 4개월 주기로 출시되며, 매년 세 번의 주요 릴리스를 제공합니다. 각 새 릴리스는 이전 릴리스를 기반으로 구축되어 새로운 기능 및 성능 향상은 물론 버그 수정 및 개선 사항을 제공합니다. Trident의 새로운 기능을 활용하려면 최소 1년에 한 번 업그레이드하는 것이 좋습니다. 
+---
+= Trident 업그레이드
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+24.02 릴리스부터 Trident는 4개월 주기로 릴리스를 진행하며, 매년 세 번의 주요 릴리스를 제공합니다. 각 새 릴리스는 이전 릴리스를 기반으로 새로운 기능, 성능 향상, 버그 수정 및 개선 사항을 제공합니다. Trident의 새로운 기능을 활용하려면 1년에 한 번 이상 업그레이드하는 것이 좋습니다.
+
+
+
+== 업그레이드 전 고려 사항
+
+Trident의 최신 릴리스로 업그레이드할 때 다음 사항을 고려하십시오.
+
+* 주어진 Kubernetes 클러스터 내의 모든 네임스페이스에는 하나의 Trident 인스턴스만 설치되어야 합니다.
+* Trident 23.07 이상에서는 v1 볼륨 스냅샷이 필요하며 알파 또는 베타 스냅샷은 더 이상 지원되지 않습니다.
+* 업그레이드할 때, Trident에서 사용하는 `parameter.fsType`에 `StorageClasses`를 제공하는 것이 중요합니다. 기존 볼륨에 영향을 주지 않고 `StorageClasses`를 삭제하고 다시 생성할 수 있습니다.
++
+** 이는 SAN 볼륨에 대한  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/["보안 컨텍스트"^] 적용을 위한 **필수 요건**입니다.
+** https://github.com/NetApp/trident/tree/master/trident-installer/sample-input[샘플 입력^] 디렉토리에는 https://github.com/NetApp/trident/blob/master/trident-installer/sample-input/storage-class-samples/storage-class-basic.yaml.templ[`storage-class-basic.yaml.templ`^] 및 link:https://github.com/NetApp/trident/blob/master/trident-installer/sample-input/storage-class-samples/storage-class-bronze-default.yaml[`storage-class-bronze-default.yaml`^]와 같은 예제가 포함되어 있습니다.
+** 자세한 내용은 link:../trident-rn.html["알려진 문제"]을 참조하십시오.
+
+
+
+
+
+
+== 1단계: 버전 선택
+
+Trident 버전은 날짜 기반 `YY.MM` 명명 규칙을 따르며, 여기서 "YY"는 연도의 마지막 두 자리 숫자이고 "MM"은 월을 나타냅니다. 도트 릴리스는 `YY.MM.X` 규칙을 따르며, 여기서 "X"는 패치 레벨을 나타냅니다. 업그레이드할 버전은 업그레이드하려는 현재 버전을 기준으로 선택합니다.
+
+* 설치된 버전에서 4개 릴리스 이내의 대상 릴리스로 직접 업그레이드할 수 있습니다. 예를 들어 24.06(또는 24.06의 모든 마이너 버전)에서 25.06으로 직접 업그레이드할 수 있습니다.
+* 4개 릴리스 기간 외의 버전에서 업그레이드하는 경우 여러 단계를 거쳐 업그레이드하십시오. link:../earlier-versions.html["이전 버전"]에서 업그레이드하는 경우 해당 버전의 업그레이드 지침을 사용하여 4개 릴리스 기간에 맞는 최신 릴리스로 업그레이드하십시오. 예를 들어 23.07 버전을 실행 중이고 25.06으로 업그레이드하려는 경우:
++
+.. 먼저 23.07에서 24.06으로 업그레이드하십시오.
+.. 그다음 24.06에서 25.06으로 업그레이드하세요.
+
+
+
+
+
+NOTE: OpenShift Container Platform에서 Trident 오퍼레이터를 사용하여 업그레이드할 경우 Trident 21.01.1 이상으로 업그레이드해야 합니다. 21.01.0과 함께 릴리스된 Trident 오퍼레이터에는 알려진 문제가 있으며 이 문제는 21.01.1에서 수정되었습니다. 자세한 내용은 https://github.com/NetApp/trident/issues/517["GitHub의 문제 세부 정보"^]을 참조하십시오.
+
+
+
+== 2단계: 원래 설치 방법을 확인합니다
+
+Trident를 원래 설치하는 데 사용한 버전을 확인하려면:
+
+.  `kubectl get pods -n trident`를 사용하여 Pod를 검사합니다.
++
+** 오퍼레이터 포드가 없는 경우 Trident가 `tridentctl`을 사용하여 설치되었습니다.
+** 오퍼레이터 포드가 있는 경우, Trident는 수동으로 또는 Helm을 사용하여 Trident 오퍼레이터를 통해 설치되었습니다.
+
+
+. 운영자 포드가 있는 경우 `kubectl describe torc`를 사용하여 Helm을 통해 Trident가 설치되었는지 확인합니다.
++
+** Helm 레이블이 있는 경우 Trident는 Helm을 사용하여 설치되었습니다.
+** Helm 레이블이 없으면 Trident 운영자를 사용하여 Trident를 수동으로 설치한 것입니다.
+
+
+
+
+
+
+== 3단계: 업그레이드 방법 선택
+
+일반적으로 초기 설치 시 사용했던 방법과 동일한 방법으로 업그레이드하는 것이 좋지만, link:../trident-install/kubernetes-deploy.html#moving-between-installation-methods["설치 방법 간 이동"]. Trident를 업그레이드하는 두 가지 옵션이 있습니다.
+
+* link:upgrade-operator.html["Trident 운영자를 사용하여 업그레이드하세요"]
++
+
+TIP: 운영자와 함께 업그레이드하기 전에 link:upgrade-operator-overview.html["운영자 업그레이드 워크플로 이해"]을(를) 검토하는 것이 좋습니다.
+
+* 
+

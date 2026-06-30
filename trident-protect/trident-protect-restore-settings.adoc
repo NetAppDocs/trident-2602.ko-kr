@@ -1,0 +1,143 @@
+---
+sidebar: sidebar 
+permalink: trident-protect/trident-protect-restore-settings.html 
+keywords: trident, protect, restore, data, backup 
+summary: 주석, 네임스페이스 설정 및 스토리지 옵션을 사용하여 Trident Protect 복원 작업을 사용자 지정할 수 있습니다. 
+---
+= 고급 Trident Protect 복원 설정을 사용하십시오
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+주석, 네임스페이스 설정, 스토리지 옵션과 같은 고급 설정을 사용하여 특정 요구 사항에 맞게 복원 작업을 사용자 지정할 수 있습니다.
+
+
+
+== 복원 및 페일오버 작업 중 네임스페이스 주석 및 레이블
+
+복원 및 페일오버 작업 중에 대상 네임스페이스의 레이블과 주석은 소스 네임스페이스의 레이블과 주석과 일치하도록 조정됩니다. 대상 네임스페이스에 존재하지 않는 소스 네임스페이스의 레이블 또는 주석은 추가되며, 이미 존재하는 레이블 또는 주석은 소스 네임스페이스의 값과 일치하도록 덮어쓰여집니다. 대상 네임스페이스에만 존재하는 레이블 또는 주석은 변경되지 않습니다.
+
+
+NOTE: Red Hat OpenShift를 사용하는 경우 OpenShift 환경에서 네임스페이스 어노테이션의 중요한 역할을 알아두는 것이 중요합니다. 네임스페이스 어노테이션은 복원된 Pod가 OpenShift 보안 컨텍스트 제약 조건(SCC)에 정의된 적절한 권한 및 보안 구성을 준수하고 권한 문제 없이 볼륨에 액세스할 수 있도록 보장합니다. 자세한 내용은 link:https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/authentication_and_authorization/managing-pod-security-policies["OpenShift 보안 컨텍스트 제약 조건 문서"^]를 참조하십시오.
+
+복원 또는 장애 조치 작업을 수행하기 전에 Kubernetes 환경 변수 `RESTORE_SKIP_NAMESPACE_ANNOTATIONS`를 설정하여 대상 네임스페이스의 특정 어노테이션이 덮어쓰여지는 것을 방지할 수 있습니다. 예를 들면 다음과 같습니다.
+
+[source, console]
+----
+helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-protect \
+  --set-string restoreSkipNamespaceAnnotations="{<annotation_key_to_skip_1>,<annotation_key_to_skip_2>}" \
+  --reuse-values
+----
+
+NOTE: 복원 또는 페일오버 작업을 수행할 때 `restoreSkipNamespaceAnnotations` 및 `restoreSkipNamespaceLabels`에 지정된 네임스페이스 주석 및 레이블은 복원 또는 페일오버 작업에서 제외됩니다. 초기 Helm 설치 시 이러한 설정이 구성되어 있는지 확인하십시오. 자세한 내용은 link:../trident-protect/trident-protect-customize-installation.html#configure-additional-trident-protect-helm-chart-settings["Trident Protect 헬름 차트의 추가 설정을 구성합니다"]를 참조하십시오.
+
+ `--create-namespace` 플래그와 함께 Helm을 사용하여 소스 애플리케이션을 설치한 경우  `name` 레이블 키에 특별한 처리가 적용됩니다. 복원 또는 페일오버 프로세스 중에 Trident Protect는 이 레이블을 대상 네임스페이스로 복사하지만 소스의 값이 소스 네임스페이스와 일치하는 경우 값을 대상 네임스페이스 값으로 업데이트합니다. 이 값이 소스 네임스페이스와 일치하지 않으면 변경 없이 대상 네임스페이스로 복사됩니다.
+
+
+
+=== 예
+
+다음 예제는 서로 다른 어노테이션과 레이블을 가진 소스 및 대상 네임스페이스를 보여줍니다. 작업 전후의 대상 네임스페이스 상태와 어노테이션 및 레이블이 대상 네임스페이스에서 어떻게 결합되거나 덮어쓰여지는지 확인할 수 있습니다.
+
+
+
+==== 복원 또는 페일오버 작업 전에
+
+다음 표는 복원 또는 페일오버 작업 전 예시 소스 및 대상 네임스페이스의 상태를 보여줍니다.
+
+[cols="1,2a,2a"]
+|===
+| 네임스페이스 | 주석 | 라벨 
+
+
+| 네임스페이스 ns-1(소스)  a| 
+* annotation.one/key: "updatedvalue"
+* annotation.two/key: "true"
+
+ a| 
+* environment=production
+* 컴플라이언스=hipaa
+* name=ns-1
+
+
+
+
+| 네임스페이스 ns-2(대상)  a| 
+* annotation.one/key: "true"
+* annotation.three/key: "false"
+
+ a| 
+* role=database
+
+
+|===
+
+
+==== 복원 작업 후
+
+다음 표는 복원 또는 장애 조치 작업 후 예시 대상 네임스페이스의 상태를 보여줍니다. 일부 키가 추가되었고, 일부는 덮어쓰여졌으며,  `name` 레이블은 대상 네임스페이스와 일치하도록 업데이트되었습니다.
+
+[cols="1,2a,2a"]
+|===
+| 네임스페이스 | 주석 | 라벨 
+
+
+| 네임스페이스 ns-2(대상)  a| 
+* annotation.one/key: "updatedvalue"
+* annotation.two/key: "true"
+* annotation.three/key: "false"
+
+ a| 
+* name=ns-2
+* 컴플라이언스=hipaa
+* environment=production
+* role=database
+
+
+|===
+
+
+== 지원되는 필드
+
+이 섹션에서는 복원 작업에 사용할 수 있는 추가 필드에 대해 설명합니다.
+
+
+
+=== 스토리지 클래스 매핑
+
+ `spec.storageClassMapping` 속성은 소스 애플리케이션에 있는 스토리지 클래스를 대상 클러스터의 새 스토리지 클래스로 매핑하는 방법을 정의합니다. 이 속성은 스토리지 클래스가 다른 클러스터 간에 애플리케이션을 마이그레이션하거나 BackupRestore 작업의 스토리지 백엔드를 변경할 때 사용할 수 있습니다.
+
+*예:*
+
+[source, yaml]
+----
+storageClassMapping:
+  - destination: "destinationStorageClass1"
+    source: "sourceStorageClass1"
+  - destination: "destinationStorageClass2"
+    source: "sourceStorageClass2"
+----
+
+
+== 지원되는 주석
+
+이 섹션에서는 시스템의 다양한 동작을 구성하는 데 지원되는 어노테이션 목록을 제공합니다. 사용자가 어노테이션을 명시적으로 설정하지 않으면 시스템은 기본값을 사용합니다.
+
+[cols="1,1,3,1"]
+|===
+| 주석 | 유형 | 설명 | 기본값 
+
+
+| protect.trident.netapp.io/data-mover-timeout-sec | 문자열 | 데이터 이동기 작동이 정지될 수 있는 최대 허용 시간(초)입니다. | "300" 
+
+
+| protect.trident.netapp.io/kopia-content-cache-size-limit-mb | 문자열 | Kopia 콘텐츠 캐시의 최대 크기 제한(메가바이트)입니다. | "1000" 
+
+
+| protect.trident.netapp.io/pvc-bind-timeout-sec | 문자열 | 새로 생성된 PersistentVolumeClaims(PVC)가  `Bound` 단계에 도달하기까지 기다리는 최대 시간(초)입니다. 이 시간이 지나면 작업이 실패합니다. 모든 복원 CR 유형(BackupRestore, BackupInplaceRestore, SnapshotRestore, SnapshotInplaceRestore)에 적용됩니다. 스토리지 백엔드 또는 클러스터에서 더 많은 시간이 필요한 경우 더 높은 값을 사용하십시오. | "1200" (20분) 
+|===

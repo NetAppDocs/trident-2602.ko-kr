@@ -1,0 +1,527 @@
+---
+sidebar: sidebar 
+permalink: trident-use/anf-examples.html 
+keywords: trident backend, azure netapp files, smb volumes, smb, windows 
+summary: Azure NetApp Files의 NFS 및 SMB 백엔드 구성 옵션에 대해 알아보고 구성 예제를 살펴보세요. 
+---
+= Azure NetApp Files 백엔드 구성 옵션 및 예
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Azure NetApp Files의 NFS 및 SMB 백엔드 구성 옵션에 대해 알아보고 구성 예제를 살펴보세요.
+
+
+
+== 백엔드 configuration 옵션
+
+Trident는 백엔드 구성(서브넷, 가상 네트워크, 서비스 수준, 위치)을 사용하여 요청된 위치에서 사용 가능하고 요청된 서비스 수준 및 서브넷과 일치하는 용량 풀에 Azure NetApp Files 볼륨을 생성합니다.
+
+Azure NetApp Files 백엔드는 이러한 구성 옵션을 제공합니다.
+
+[cols="3"]
+|===
+| 매개변수 | 설명 | 기본값 
+
+
+| `version` | 백엔드 구성 버전. | 항상 1 
+
+
+| `storageDriverName` | 스토리지 드라이버의 이름 | "azure-netapp-files" 
+
+
+| `backendName` | 스토리지 백엔드의 사용자 지정 이름 | 드라이버 이름 + "_" + 임의의 문자 
+
+
+| `subscriptionID` | Azure 구독의 구독 ID AKS 클러스터에서 관리 ID가 활성화된 경우 선택 사항입니다. |  
+
+
+| `tenantID` | AKS 클러스터에서 관리형 ID 또는 클라우드 ID를 사용하는 경우 앱 등록의 테넌트 ID는 선택 사항입니다. |  
+
+
+| `clientID` | AKS 클러스터에서 관리형 ID 또는 클라우드 ID를 사용하는 경우 앱 등록의 클라이언트 ID는 선택 사항입니다. |  
+
+
+| `clientSecret` | AKS 클러스터에서 관리형 ID 또는 클라우드 ID를 사용하는 경우 앱 등록의 클라이언트 암호는 선택 사항입니다. |  
+
+
+| `serviceLevel` |  `Standard`,  `Premium` 또는  `Ultra` 중 하나 | "" (무작위) 
+
+
+| `location` | 새 볼륨이 생성될 Azure 위치의 이름입니다. AKS 클러스터에서 관리 ID가 활성화된 경우 선택 사항입니다. |  
+
+
+| `resourceGroups` | 검색된 리소스를 필터링하기 위한 리소스 그룹 목록 | "[]" (필터 없음) 
+
+
+| `netappAccounts` | 검색된 리소스를 필터링하기 위한 NetApp 계정 목록 | "[]" (필터 없음) 
+
+
+| `capacityPools` | 검색된 리소스를 필터링하기 위한 용량 풀 목록 | "[]" (필터 없음, 무작위) 
+
+
+| `virtualNetwork` | 위임된 서브넷이 있는 가상 네트워크의 이름 | "" 
+
+
+| `subnet` | 에 위임된 서브넷의 이름 `Microsoft.Netapp/volumes` | "" 
+
+
+| `networkFeatures` | 볼륨에 대한 VNet 기능 집합은 `Basic` 또는 `Standard`일 수 있습니다. 네트워크 기능은 모든 지역에서 사용할 수 없으며 구독에서 활성화해야 할 수도 있습니다. 기능이 활성화되지 않은 상태에서 `networkFeatures`을(를) 지정하면 볼륨 프로비저닝이 실패합니다. | "" 
+
+
+| `nfsMountOptions` | NFS 마운트 옵션을 세밀하게 제어할 수 있습니다. SMB 볼륨에는 적용되지 않습니다. NFS 버전 4.1을 사용하여 볼륨을 마운트하려면 쉼표로 구분된 마운트 옵션 목록에 `nfsvers=4`를 포함하여 NFS v4.1을 선택합니다. 스토리지 클래스 정의에 설정된 마운트 옵션은 백엔드 구성에 설정된 마운트 옵션을 재정의합니다. | "nfsvers=3" 
+
+
+| `limitVolumeSize` | 요청된 볼륨 크기가 이 값보다 크면 프로비저닝에 실패합니다. | "" (기본적으로 적용되지 않음) 
+
+
+| `debugTraceFlags` | 문제 해결 시 사용할 디버그 플래그입니다. 예 `\{"api": false, "method": true, "discovery": true}`. 문제 해결 중이거나 자세한 로그 덤프가 필요한 경우가 아니면 사용하지 마십시오. | null 
+
+
+| `nasType` | NFS 또는 SMB 볼륨 생성을 구성합니다. 옵션은 `nfs`, `smb` 또는 null입니다. null로 설정하면 기본적으로 NFS 볼륨이 사용됩니다. | `nfs` 
+
+
+| `supportedTopologies` | 이 백엔드에서 지원하는 지역 및 영역 목록을 나타냅니다. 자세한 내용은 link:../trident-use/csi-topology.html["CSI 토폴로지 사용"]을 참조하십시오. |  
+
+
+| `qosType` | QoS 유형(자동 또는 수동)을 나타냅니다. | 자동 
+
+
+| `maxThroughput` | 최대 허용 처리량을 MiB/sec 단위로 설정합니다. 수동 QoS 용량 풀에서만 지원됩니다. | `4 MiB/sec` 
+|===
+
+NOTE: 네트워크 기능에 대한 자세한 내용은 link:https://docs.microsoft.com/en-us/azure/azure-netapp-files/configure-network-features["Azure NetApp Files 볼륨에 대한 네트워크 기능 구성"^]을(를) 참조하십시오.
+
+
+
+== Azure 클라우드 환경 고려(26.02)
+
+26.02 릴리스부터 Trident는 여러 Azure 클라우드 환경에서 Azure NetApp Files 백엔드를 생성하고 관리하는 것을 지원합니다.
+
+지원되는 Azure 클라우드는 다음과 같습니다.
+
+* Azure Commercial
+* Azure Government(Azure Government/MAG)
+
+
+Trident를 배포하거나 Azure NetApp Files 백엔드를 생성할 때 Azure Resource Manager 및 인증 엔드포인트가 Azure 클라우드 환경과 일치하는지 확인하십시오. 엔드포인트가 일치하지 않으면 `tridentctl` 인증할 수 없으며 백엔드 생성이 실패합니다.
+
+
+
+=== 필요한 권한 및 리소스
+
+PVC를 생성할 때 "No capacity pools found" 오류가 발생하는 경우, 앱 등록에 필요한 권한 및 리소스(서브넷, 가상 네트워크, 용량 풀)가 연결되어 있지 않을 가능성이 높습니다. 디버그 모드가 활성화된 경우, Trident는 백엔드 생성 시 검색된 Azure 리소스를 로그에 기록합니다. 적절한 역할이 사용되고 있는지 확인하십시오.
+
+ `resourceGroups`,  `netappAccounts`,  `capacityPools`,  `virtualNetwork` 및  `subnet`의 값은 단축 이름 또는 정규화된 이름을 사용하여 지정할 수 있습니다. 단축 이름은 동일한 이름을 가진 여러 리소스와 일치할 수 있으므로 대부분의 경우 정규화된 이름을 사용하는 것이 좋습니다.
+
+
+NOTE: vNet이 Azure NetApp Files(ANF) 스토리지 계정과 다른 리소스 그룹에 있는 경우 백엔드에 대한 resourceGroups 목록을 구성할 때 가상 네트워크의 리소스 그룹을 지정합니다.
+
+ `resourceGroups`,  `netappAccounts` 및  `capacityPools` 값은 검색된 리소스 집합을 이 스토리지 백엔드에서 사용 가능한 리소스로 제한하는 필터이며, 어떤 조합으로든 지정할 수 있습니다. 정규화된 이름은 다음 형식을 따릅니다.
+
+[cols="2"]
+|===
+| 유형 | 형식 
+
+
+| 리소스 그룹 | <resource group> 
+
+
+| NetApp 계정 | <resource group>/<netapp account> 
+
+
+| 용량 풀 | <resource group>/<netapp account>/<capacity pool> 
+
+
+| 가상 네트워크 | <resource group>/<virtual network> 
+
+
+| 서브넷 | <resource group>/<virtual network>/<subnet> 
+|===
+
+
+=== 볼륨 프로비저닝
+
+구성 파일의 특수 섹션에서 다음 옵션을 지정하여 기본 볼륨 프로비저닝을 제어할 수 있습니다. 자세한 내용은 <<예시 구성>>를 참조하십시오.
+
+[cols=",,"]
+|===
+| 매개변수 | 설명 | 기본값 
+
+
+| `exportRule` | 새 볼륨에 대한 내보내기 규칙입니다. 
+`exportRule`는 CIDR 표기법으로 IPv4 주소 또는 IPv4 서브넷을 쉼표로 구분한 목록이어야 합니다. SMB 볼륨에는 적용되지 않습니다. | "0.0.0.0/0" 
+
+
+| `snapshotDir` |  `.snapshot` 디렉토리에 대한 액세스 | `true`,  `false` (명시적으로 설정). 
+
+
+| `size` | 새 볼륨의 기본 크기 | "100G" 
+
+
+| `unixPermissions` | 새 볼륨의 Unix 권한(8진수 4자리). SMB 볼륨에는 적용되지 않습니다. | "" (미리보기 기능이며, 구독 시 화이트리스트 등록이 필요합니다.) 
+|===
+
+
+== 예시 구성
+
+다음 예시들은 대부분의 매개변수를 기본값으로 유지하는 기본 구성을 보여줍니다. 이것이 백엔드를 정의하는 가장 쉬운 방법입니다.
+
+.최소 구성
+[%collapsible]
+====
+이는 최소한의 백엔드 구성입니다. 이 구성을 사용하면 Trident는 구성된 위치에서 Azure NetApp Files에 위임된 모든 NetApp 계정, 용량 풀 및 서브넷을 검색하고 해당 풀과 서브넷 중 하나에 새 볼륨을 무작위로 배치합니다.  `nasType`이 생략되었으므로  `nfs` 기본값이 적용되어 백엔드에서 NFS 볼륨을 프로비저닝합니다.
+
+이 구성은 Azure NetApp Files를 처음 시작하고 기능을 테스트할 때 이상적이지만, 실제로는 프로비저닝하는 볼륨에 대한 추가 범위 지정이 필요할 것입니다.
+
+[source, yaml]
+----
+---
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-tbc-anf-1
+  namespace: trident
+spec:
+  version: 1
+  storageDriverName: azure-netapp-files
+  subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+  tenantID: 68e4f836-edc1-fake-bff9-b2d865ee56cf
+  clientID: dd043f63-bf8e-fake-8076-8de91e5713aa
+  clientSecret: SECRET
+  location: eastus
+----
+====
+.AKS용 관리 ID
+[%collapsible]
+====
+이 백엔드 구성에서는 관리 ID를 사용할 때 선택 사항인  `subscriptionID`,  `tenantID`,  `clientID` 및  `clientSecret`가 생략되었습니다.
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-tbc-anf-1
+  namespace: trident
+spec:
+  version: 1
+  storageDriverName: azure-netapp-files
+  capacityPools:
+    - resource-group-1/netapp-account-1/ultra-pool
+  resourceGroups:
+    - resource-group-1
+  netappAccounts:
+    - resource-group-1/netapp-account-1
+  virtualNetwork: resource-group-1/eastus-prod-vnet
+  subnet: resource-group-1/eastus-prod-vnet/eastus-anf-subnet
+----
+====
+.AKS용 클라우드 ID
+[%collapsible]
+====
+이 백엔드 구성은 클라우드 ID를 사용할 때 선택 사항인  `tenantID`,  `clientID` 및  `clientSecret`를 생략합니다.
+
+[source, yaml]
+----
+apiVersion: trident.netapp.io/v1
+kind: TridentBackendConfig
+metadata:
+  name: backend-tbc-anf-1
+  namespace: trident
+spec:
+  version: 1
+  storageDriverName: azure-netapp-files
+  capacityPools:
+    - ultra-pool
+  resourceGroups:
+    - aks-ami-eastus-rg
+  netappAccounts:
+    - smb-na
+  virtualNetwork: eastus-prod-vnet
+  subnet: eastus-anf-subnet
+  location: eastus
+  subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+----
+====
+.용량 풀 필터를 사용한 특정 서비스 수준 구성
+[%collapsible]
+====
+이 백엔드 구성은 Azure의 `eastus` 위치에 있는 `Ultra` 용량 풀에 볼륨을 배치합니다. Trident는 해당 위치에서 Azure NetApp Files에 위임된 모든 서브넷을 자동으로 검색하고 그중 하나에 새 볼륨을 임의로 배치합니다.
+
+[source, yaml]
+----
+---
+version: 1
+storageDriverName: azure-netapp-files
+subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+tenantID: 68e4f836-edc1-fake-bff9-b2d865ee56cf
+clientID: dd043f63-bf8e-fake-8076-8de91e5713aa
+clientSecret: SECRET
+location: eastus
+serviceLevel: Ultra
+capacityPools:
+  - application-group-1/account-1/ultra-1
+  - application-group-1/account-1/ultra-2
+----
+====
+.수동 QoS 용량 풀을 사용한 백엔드 예
+[%collapsible]
+====
+이 백엔드 구성은 수동 QoS 용량 풀을 사용하여 Azure의 `eastus` 위치에 볼륨을 배치합니다.
+
+[source, yaml]
+----
+---
+version: 1
+storageDriverName: azure-netapp-files
+backendName: anf1
+location: eastus
+labels:
+  clusterName: test-cluster-1
+  cloud: anf
+  nasType: nfs
+defaults:
+  qosType: Manual
+storage:
+  - serviceLevel: Ultra
+    labels:
+      performance: gold
+    defaults:
+      maxThroughput: 10
+  - serviceLevel: Premium
+    labels:
+      performance: silver
+    defaults:
+      maxThroughput: 5
+  - serviceLevel: Standard
+    labels:
+      performance: bronze
+    defaults:
+      maxThroughput: 3
+----
+====
+.고급 구성
+[%collapsible]
+====
+이 백엔드 구성은 볼륨 배치 범위를 단일 서브넷으로 더욱 축소하고 일부 볼륨 프로비저닝 기본값을 수정합니다.
+
+[source, yaml]
+----
+---
+version: 1
+storageDriverName: azure-netapp-files
+subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+tenantID: 68e4f836-edc1-fake-bff9-b2d865ee56cf
+clientID: dd043f63-bf8e-fake-8076-8de91e5713aa
+clientSecret: SECRET
+location: eastus
+serviceLevel: Ultra
+capacityPools:
+  - application-group-1/account-1/ultra-1
+  - application-group-1/account-1/ultra-2
+virtualNetwork: application-group-1/eastus-prod-vnet
+subnet: application-group-1/eastus-prod-vnet/my-subnet
+networkFeatures: Standard
+nfsMountOptions: vers=3,proto=tcp,timeo=600
+limitVolumeSize: 500Gi
+defaults:
+  exportRule: 10.0.0.0/24,10.0.1.0/24,10.0.2.100
+  snapshotDir: "true"
+  size: 200Gi
+  unixPermissions: "0777"
+----
+====
+.가상 풀 구성
+[%collapsible]
+====
+이 백엔드 구성은 단일 파일에 여러 스토리지 풀을 정의합니다. 이는 서로 다른 서비스 수준을 지원하는 여러 용량 풀이 있고 이를 나타내는 스토리지 클래스를 Kubernetes에 생성하려는 경우에 유용합니다. 가상 풀 레이블은 `performance`을 기반으로 풀을 구분하는 데 사용되었습니다.
+
+[source, yaml]
+----
+---
+version: 1
+storageDriverName: azure-netapp-files
+subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+tenantID: 68e4f836-edc1-fake-bff9-b2d865ee56cf
+clientID: dd043f63-bf8e-fake-8076-8de91e5713aa
+clientSecret: SECRET
+location: eastus
+resourceGroups:
+  - application-group-1
+networkFeatures: Basic
+nfsMountOptions: vers=3,proto=tcp,timeo=600
+labels:
+  cloud: azure
+storage:
+  - labels:
+      performance: gold
+    serviceLevel: Ultra
+    capacityPools:
+      - application-group-1/netapp-account-1/ultra-1
+      - application-group-1/netapp-account-1/ultra-2
+    networkFeatures: Standard
+  - labels:
+      performance: silver
+    serviceLevel: Premium
+    capacityPools:
+      - application-group-1/netapp-account-1/premium-1
+  - labels:
+      performance: bronze
+    serviceLevel: Standard
+    capacityPools:
+      - application-group-1/netapp-account-1/standard-1
+      - application-group-1/netapp-account-1/standard-2
+----
+====
+.지원되는 토폴로지 구성
+[%collapsible]
+====
+Trident는 리전 및 가용 영역을 기반으로 워크로드용 볼륨 프로비저닝을 지원합니다. 이 백엔드 구성의  `supportedTopologies` 블록은 백엔드별 리전 및 영역 목록을 제공하는 데 사용됩니다. 여기에 지정된 리전 및 영역 값은 각 Kubernetes 클러스터 노드의 레이블에 있는 리전 및 영역 값과 일치해야 합니다. 이러한 리전 및 영역은 스토리지 클래스에 제공될 수 있는 허용 값 목록을 나타냅니다. 백엔드에 제공된 리전 및 영역의 하위 집합을 포함하는 스토리지 클래스의 경우 Trident는 언급된 리전 및 영역에 볼륨을 생성합니다. 자세한 내용은 link:../trident-use/csi-topology.html["CSI 토폴로지 사용"]을 참조하십시오.
+
+[source, yaml]
+----
+---
+version: 1
+storageDriverName: azure-netapp-files
+subscriptionID: 9f87c765-4774-fake-ae98-a721add45451
+tenantID: 68e4f836-edc1-fake-bff9-b2d865ee56cf
+clientID: dd043f63-bf8e-fake-8076-8de91e5713aa
+clientSecret: SECRET
+location: eastus
+serviceLevel: Ultra
+capacityPools:
+  - application-group-1/account-1/ultra-1
+  - application-group-1/account-1/ultra-2
+supportedTopologies:
+  - topology.kubernetes.io/region: eastus
+    topology.kubernetes.io/zone: eastus-1
+  - topology.kubernetes.io/region: eastus
+    topology.kubernetes.io/zone: eastus-2
+----
+====
+
+
+== 스토리지 클래스 정의
+
+다음 `StorageClass` 정의는 위의 스토리지 풀을 참조합니다.
+
+
+
+===  `parameter.selector` 필드를 사용한 예시 정의
+
+ `parameter.selector`을 사용하면 각 `StorageClass`에 대해 볼륨을 호스팅하는 데 사용되는 가상 풀을 지정할 수 있습니다. 볼륨은 선택한 풀에 정의된 속성을 갖게 됩니다.
+
+[source, yaml]
+----
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gold
+provisioner: csi.trident.netapp.io
+parameters:
+  selector: performance=gold
+allowVolumeExpansion: true
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: silver
+provisioner: csi.trident.netapp.io
+parameters:
+  selector: performance=silver
+allowVolumeExpansion: true
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: bronze
+provisioner: csi.trident.netapp.io
+parameters:
+  selector: performance=bronze
+allowVolumeExpansion: true
+----
+
+
+=== SMB 볼륨에 대한 정의 예
+
+ `nasType`,  `node-stage-secret-name` 및  `node-stage-secret-namespace`를 사용하면 SMB 볼륨을 지정하고 필요한 Active Directory 자격 증명을 제공할 수 있습니다.
+
+.기본 네임스페이스의 기본 구성
+[%collapsible]
+====
+[source, yaml]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: anf-sc-smb
+provisioner: csi.trident.netapp.io
+parameters:
+  backendType: "azure-netapp-files"
+  trident.netapp.io/nasType: "smb"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: "default"
+----
+====
+.네임스페이스별로 서로 다른 시크릿 사용
+[%collapsible]
+====
+[source, yaml]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: anf-sc-smb
+provisioner: csi.trident.netapp.io
+parameters:
+  backendType: "azure-netapp-files"
+  trident.netapp.io/nasType: "smb"
+  csi.storage.k8s.io/node-stage-secret-name: "smbcreds"
+  csi.storage.k8s.io/node-stage-secret-namespace: ${pvc.namespace}
+----
+====
+.볼륨마다 다른 시크릿 사용
+[%collapsible]
+====
+[source, yaml]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: anf-sc-smb
+provisioner: csi.trident.netapp.io
+parameters:
+  backendType: "azure-netapp-files"
+  trident.netapp.io/nasType: "smb"
+  csi.storage.k8s.io/node-stage-secret-name: ${pvc.name}
+  csi.storage.k8s.io/node-stage-secret-namespace: ${pvc.namespace}
+----
+====
+
+NOTE: `nasType: smb` SMB 볼륨을 지원하는 풀에 대한 필터입니다.
+`nasType: nfs` 또는 `nasType: null` NFS 풀에 대한 필터입니다.
+
+
+
+== 백엔드 생성
+
+백엔드 구성 파일을 생성한 후 다음 명령을 실행하십시오.
+
+[listing]
+----
+tridentctl create backend -f <backend-file>
+----
+상용이 아닌 Azure 클라우드를 사용하는 경우  `tridentctl`이(가) Azure 클라우드 환경에 대한 Azure Resource Manager 및 인증 엔드포인트를 사용하도록 구성되어 있는지 확인하십시오. 백엔드 생성이 실패하면 백엔드 구성을 확인하고 로그를 검토하여 원인을 파악하십시오.
+
+[listing]
+----
+tridentctl logs
+----
+구성 파일의 문제를 식별하고 수정한 후 create 명령을 다시 실행할 수 있습니다.

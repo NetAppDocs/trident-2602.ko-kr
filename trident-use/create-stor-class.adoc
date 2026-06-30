@@ -1,0 +1,118 @@
+---
+sidebar: sidebar 
+permalink: trident-use/create-stor-class.html 
+keywords: storage class, manage storage class, storage classes, kubernetes storage classes 
+summary: Kubernetes StorageClass 파일을 설계하고 StorageClass를 생성하여 Trident에 볼륨 프로비저닝 방법을 지시할 수 있습니다. 
+---
+= 스토리지 클래스를 생성합니다
+:hardbreaks:
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Kubernetes StorageClass 오브젝트를 구성하고 스토리지 클래스를 생성하여 Trident에 볼륨을 프로비저닝하는 방법을 지시합니다.
+
+
+
+== Kubernetes StorageClass 오브젝트 구성
+
+ https://kubernetes.io/docs/concepts/storage/storage-classes/["Kubernetes StorageClass 오브젝트"^]은 Trident를 해당 클래스에 사용되는 프로비저너로 식별하고 Trident에 볼륨 프로비저닝 방법을 지시합니다. 예를 들면 다음과 같습니다.
+
+[source, yaml]
+----
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ontap-gold
+provisioner: csi.trident.netapp.io
+mountOptions:
+  - nfsvers=3
+  - nolock
+parameters:
+  backendType: "ontap-nas"
+  media: "ssd"
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+----
+스토리지 클래스가 link:../trident-reference/objects.html["Kubernetes 및 Trident 객체"]와 상호 작용하는 방법 및 Trident가 볼륨을 프로비저닝하는 방식을 제어하는 매개변수에 대한 자세한 내용은  `PersistentVolumeClaim`를 참조하십시오.
+
+
+
+== 스토리지 클래스를 생성합니다
+
+StorageClass 객체를 생성한 후 스토리지 클래스를 생성할 수 있습니다. <<스토리지 클래스 샘플>>에서는 사용하거나 수정할 수 있는 몇 가지 기본 샘플을 제공합니다.
+
+.단계
+. 이것은 Kubernetes 객체이므로 `kubectl`을 사용하여 Kubernetes에서 생성합니다.
++
+[listing]
+----
+kubectl create -f sample-input/storage-class-basic-csi.yaml
+----
+. 이제 Kubernetes와 Trident 모두에서 *basic-csi* 스토리지 클래스가 표시되어야 하며, Trident가 백엔드에서 풀을 검색했을 것입니다.
++
+[source, console]
+----
+kubectl get sc basic-csi
+----
+
+
+[listing]
+----
+NAME         PROVISIONER             AGE
+basic-csi    csi.trident.netapp.io   15h
+----
+[source, console]
+----
+./tridentctl -n trident get storageclass basic-csi -o json
+----
+[source, json]
+----
+{
+  "items": [
+    {
+      "Config": {
+        "version": "1",
+        "name": "basic-csi",
+        "attributes": {
+          "backendType": "ontap-nas"
+        },
+        "storagePools": null,
+        "additionalStoragePools": null
+      },
+      "storage": {
+        "ontapnas_10.0.0.1": [
+          "aggr1",
+          "aggr2",
+          "aggr3",
+          "aggr4"
+        ]
+      }
+    }
+  ]
+}
+----
+
+
+=== 스토리지 클래스 샘플
+
+Trident는 https://github.com/NetApp/trident/tree/master/trident-installer/sample-input/storage-class-samples["특정 백엔드를 위한 간단한 스토리지 클래스 정의"^]를 제공합니다.
+
+또는 설치 프로그램과 함께 제공되는  `sample-input/storage-class-csi.yaml.templ` 파일을 편집하여  `__BACKEND_TYPE__`를 스토리지 드라이버 이름으로 교체할 수도 있습니다.
+
+[listing]
+----
+./tridentctl -n trident get backend
++-------------+----------------+--------------------------------------+--------+---------+
+|    NAME     | STORAGE DRIVER |                 UUID                 | STATE  | VOLUMES |
++-------------+----------------+--------------------------------------+--------+---------+
+| nas-backend | ontap-nas      | 98e19b74-aec7-4a3d-8dcf-128e5033b214 | online |       0 |
++-------------+----------------+--------------------------------------+--------+---------+
+
+cp sample-input/storage-class-csi.yaml.templ sample-input/storage-class-basic-csi.yaml
+
+# Modify __BACKEND_TYPE__ with the storage driver field above (e.g., ontap-nas)
+vi sample-input/storage-class-basic-csi.yaml
+----

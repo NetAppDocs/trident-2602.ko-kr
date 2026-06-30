@@ -1,0 +1,22 @@
+---
+section: trident-reco
+title: 모범 사례 및 권장 사항
+entries:
+- title: 구축
+  url: "/trident-reco/deploy-reco.html"
+- title: 스토리지 구성
+  url: "/trident-reco/storage-config-best-practices.html"
+- title: Trident 통합
+  url: "/trident-reco/integrate-trident.html"
+- title: 데이터 보호 및 재해 복구
+  url: "/trident-reco/backup.html"
+- title: Trident를 사용하여 상태 저장 애플리케이션의 페일오버 자동화
+  url: "/trident-reco/force-detach.html"
+- title: 보안
+  entries:
+  - title: 보안 권장 사항
+    url: "/trident-reco/security-reco.html"
+  - title: Linux Unified Key Setup(LUKS)
+    url: "/trident-reco/security-luks.html"
+  - title: Kerberos 전송 중 암호화
+    url: "/trident-reco/kerberos-inflight-encryption.html"
