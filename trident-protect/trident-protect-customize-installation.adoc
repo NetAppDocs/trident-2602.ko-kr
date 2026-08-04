@@ -16,6 +16,7 @@ summary: Trident Protect의 기본 설정을 사용자 지정하여 특정 요�
 
 
 
+[[specify-trident-protect-container-resource-limits]]
 == Trident Protect 컨테이너 리소스 제한 지정
 
 Trident Protect를 설치한 후 구성 파일을 사용하여 Trident Protect 컨테이너에 대한 리소스 제한을 지정할 수 있습니다. 리소스 제한을 설정하면 Trident Protect 작업에서 소비하는 클러스터 리소스의 양을 제어할 수 있습니다.
@@ -87,6 +88,7 @@ helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-p
 
 
 
+[[customize-security-context-constraints]]
 == 보안 컨텍스트 제약 조건 사용자 지정
 
 구성 파일을 사용하여 Trident Protect 설치 후 Trident Protect 컨테이너에 대한 OpenShift 보안 컨텍스트 제약 조건(SCC)을 수정할 수 있습니다. 이러한 제약 조건은 Red Hat OpenShift 클러스터의 Pod에 대한 보안 제한을 정의합니다.
@@ -134,6 +136,7 @@ helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-p
 
 
 
+[[configure-additional-trident-protect-helm-chart-settings]]
 == Trident Protect 헬름 차트의 추가 설정을 구성합니다
 
 AutoSupport 설정 및 네임스페이스 필터링을 사용자 지정하여 특정 요구 사항을 충족할 수 있습니다. 다음 표는 사용 가능한 구성 매개변수를 설명합니다.
@@ -204,6 +207,7 @@ helm upgrade trident-protect -n trident-protect netapp-trident-protect/trident-p
 ====
 
 
+[[restrict-trident-protect-pods-to-specific-nodes]]
 == Trident Protect Pod를 특정 노드로 제한합니다
 
 Kubernetes nodeSelector 노드 선택 제약 조건을 사용하여 노드 레이블을 기반으로 Trident Protect Pod를 실행할 수 있는 노드를 제어할 수 있습니다. 기본적으로 Trident Protect는 Linux를 실행하는 노드로 제한됩니다. 필요에 따라 이러한 제약 조건을 추가로 사용자 지정할 수 있습니다.

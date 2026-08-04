@@ -16,6 +16,7 @@ NetApp Trident는 Kubernetes 환경에서 Amazon FSx for NetApp ONTAP 스토리�
 
 
 
+[[prerequisites]]
 == 필수 구성 요소
 
 AWS EKS용 Trident 애드온을 구성하기 전에 다음 사항을 확인하십시오.
@@ -32,6 +33,7 @@ AWS EKS용 Trident 애드온을 구성하기 전에 다음 사항을 확인하�
 
 
 
+[[steps]]
 == 단계
 
 . EKS Pod가 AWS 리소스에 액세스할 수 있도록 IAM 역할과 AWS 시크릿을 생성해야 합니다. 지침은 link:../trident-use/trident-fsx-iam-role.html["IAM 역할 및 AWS Secret을 생성합니다"^]을 참조하십시오.
@@ -69,6 +71,7 @@ kubectl get pods -n trident
 
 
 
+[[installuninstall-the-trident-eks-add-on-using-cli]]
 == CLI를 사용하여 Trident EKS 애드온 설치/제거
 
 .CLI를 사용하여 NetApp Trident EKS 추가 기능을 설치합니다.

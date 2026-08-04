@@ -18,6 +18,7 @@ Trident Protect를 사용하면 NetApp SnapMirror 기술의 비동기 복제 기
 
 
 
+[[namespace-annotations-and-labels-during-restore-and-failover-operations]]
 == 복원 및 페일오버 작업 중 네임스페이스 주석 및 레이블
 
 복원 및 페일오버 작업 중에 대상 네임스페이스의 레이블과 주석은 소스 네임스페이스의 레이블과 주석과 일치하도록 조정됩니다. 대상 네임스페이스에 존재하지 않는 소스 네임스페이스의 레이블 또는 주석은 추가되며, 이미 존재하는 레이블 또는 주석은 소스 네임스페이스의 값과 일치하도록 덮어쓰여집니다. 대상 네임스페이스에만 존재하는 레이블 또는 주석은 변경되지 않습니다.
@@ -40,6 +41,7 @@ NOTE: 복원 또는 페일오버 작업을 수행할 때 `restoreSkipNamespaceAn
 
 
 
+[[example]]
 === 예
 
 다음 예제는 서로 다른 어노테이션과 레이블을 가진 소스 및 대상 네임스페이스를 보여줍니다. 작업 전후의 대상 네임스페이스 상태와 어노테이션 및 레이블이 대상 네임스페이스에서 어떻게 결합되거나 덮어쓰여지는지 확인할 수 있습니다.
@@ -105,6 +107,7 @@ NOTE: Trident Protect를 구성하면 데이터 보호 작업 중에 파일 시�
 
 
 
+[[execution-hooks-during-failover-and-reverse-operations]]
 == 페일오버 및 역방향 작업 중 실행 후크
 
 AppMirror 관계를 사용하여 애플리케이션을 보호할 때 페일오버 및 역방향 작업 중에 알아야 할 실행 후크와 관련된 특정 동작이 있습니다.
@@ -117,6 +120,7 @@ AppMirror 관계를 사용하여 애플리케이션을 보호할 때 페일오�
 
 
 
+[[set-up-a-replication-relationship]]
 == 복제 관계를 설정합니다
 
 복제 관계를 설정하는 과정은 다음과 같습니다.
@@ -452,6 +456,7 @@ kubectl get amr -n my-app-namespace <relationship name> -o=jsonpath='{.status}' 
 
 
 
+[[fail-over-to-destination-cluster]]
 === 타겟 클러스터로 페일오버
 
 Trident Protect를 사용하면 복제된 애플리케이션을 타겟 클러스터로 페일오버할 수 있습니다. 이 절차는 복제 관계를 중지하고 타겟 클러스터에서 애플리케이션을 온라인 상태로 전환합니다. Trident Protect는 소스 클러스터에서 애플리케이션이 작동 중인 경우 해당 애플리케이션을 중지하지 않습니다.
@@ -476,6 +481,7 @@ kubectl get amr -n my-app-namespace <relationship name> -o=jsonpath='{.status}' 
 
 
 
+[[resync-a-failed-over-replication-relationship]]
 === 페일오버된 복제 관계 재동기화
 
 재동기화 작업은 복제 관계를 다시 설정합니다. 재동기화 작업을 수행하면 원래 소스 애플리케이션이 실행 중인 애플리케이션이 되고 타겟 클러스터에서 실행 중인 애플리케이션에 대한 변경 사항은 모두 삭제됩니다.
@@ -500,6 +506,7 @@ kubectl apply -f trident-protect-relationship.yaml -n my-app-namespace
 
 
 
+[[reverse-resync-a-failed-over-replication-relationship]]
 === 페일오버된 복제 관계 역 재동기화
 
 장애 조치 복제 관계를 역동기화하면 타겟 애플리케이션이 소스 애플리케이션이 되고 소스가 타겟이 됩니다. 장애 조치 중에 타겟 애플리케이션에 변경된 내용은 유지됩니다.
@@ -513,6 +520,7 @@ kubectl apply -f trident-protect-relationship.yaml -n my-app-namespace
 
 
 
+[[reverse-application-replication-direction]]
 == 애플리케이션 복제 방향 반전
 
 복제 방향을 반대로 하면 Trident Protect는 원래 소스 스토리지 백엔드로 계속 복제하면서 애플리케이션을 타겟 스토리지 백엔드로 이동합니다. Trident Protect는 소스 애플리케이션을 중지하고 타겟 앱으로 페일오버하기 전에 데이터를 타겟으로 복제합니다.
@@ -599,6 +607,7 @@ NOTE: 장애 조치 절차의 2단계에서 AppMirrorRelationship CR 파일에  
 
 
 
+[[result]]
 === 결과
 
 역복제로 인해 다음 작업이 수행됩니다.
@@ -613,6 +622,7 @@ NOTE: 장애 조치 절차의 2단계에서 AppMirrorRelationship CR 파일에  
 
 
 
+[[fail-back-applications-to-the-original-source-cluster]]
 === 애플리케이션을 원래 소스 클러스터로 페일백
 
 Trident Protect를 사용하면 다음 일련의 작업을 통해 페일오버 작업 후 "페일 백"을 구현할 수 있습니다. 원래 복제 방향을 복원하는 이 워크플로에서 Trident Protect는 복제 방향을 반전하기 전에 모든 애플리케이션 변경 사항을 원래 소스 애플리케이션으로 복제(재동기화)합니다.
@@ -635,6 +645,7 @@ CAUTION: 일반적인 재동기화 작업을 수행하지 마십시오. 이 작�
 
 
 
+[[delete-a-replication-relationship]]
 === 복제 관계 삭제
 
 언제든지 복제 관계를 삭제할 수 있습니다. 애플리케이션 복제 관계를 삭제하면 서로 아무런 관계가 없는 두 개의 별개의 애플리케이션이 생성됩니다.

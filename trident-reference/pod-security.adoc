@@ -19,6 +19,7 @@ NOTE: PSS는 Pod Security Policies(PSP)를 대체합니다. PSP는 Kubernetes v1
 
 
 
+[[required-kubernetes-security-context-and-related-fields]]
 == 필수 Kubernetes 보안 컨텍스트 및 관련 필드
 
 [cols=","]
@@ -53,6 +54,7 @@ NOTE: PSS는 Pod Security Policies(PSP)를 대체합니다. PSP는 Kubernetes v1
 |===
 
 
+[[pod-security-standards-pss]]
 == Pod Security Standards(PSS)
 
 [cols=",,"]
@@ -68,6 +70,7 @@ WARNING: 네임스페이스 레이블을 변경하면 Pod가 스케줄링되지 
 
 
 
+[[pod-security-policies-psp]]
 == Pod Security Policies(PSP)
 
 [cols=",,"]
@@ -148,6 +151,7 @@ WARNING: 네임스페이스 레이블을 변경하면 Pod가 스케줄링되지 
 |===
 
 
+[[security-context-constraints-scc]]
 == 보안 컨텍스트 제약 조건(SCC)
 
 [cols=",,"]

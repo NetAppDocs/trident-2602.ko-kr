@@ -16,6 +16,7 @@ Trident를 사용하면 기본 네임스페이스에 볼륨을 생성하고 하�
 
 
 
+[[features]]
 == 기능
 
 TridentVolumeReference CR을 사용하면 하나 이상의 Kubernetes 네임스페이스에서 ReadWriteMany(RWX) NFS 볼륨을 안전하게 공유할 수 있습니다. 이 Kubernetes 네이티브 솔루션은 다음과 같은 이점을 제공합니다.
@@ -31,6 +32,7 @@ image::cross-namespace-sharing.png[네임스페이스 간 공유에 대한 개�
 
 
 
+[[quick-start]]
 == 빠른 시작
 
 몇 단계만 거치면 NFS 볼륨 공유를 설정할 수 있습니다.
@@ -53,6 +55,7 @@ image::cross-namespace-sharing.png[네임스페이스 간 공유에 대한 개�
 
 
 
+[[configure-the-source-and-destination-namespaces]]
 == 소스 및 대상 네임스페이스를 구성합니다
 
 보안을 보장하기 위해 네임스페이스 간 공유는 소스 네임스페이스 소유자, 클러스터 관리자 및 대상 네임스페이스 소유자의 협업과 조치가 필요합니다. 각 단계에서 사용자 역할이 지정됩니다.
@@ -133,12 +136,14 @@ Trident는 대상 PVC의 `shareFromPVC` 어노테이션을 읽고 소스 PV를 �
 
 
 
+[[delete-a-shared-volume]]
 == 공유 볼륨 삭제
 
 여러 네임스페이스에서 공유되는 볼륨을 삭제할 수 있습니다. Trident는 소스 네임스페이스에서 해당 볼륨에 대한 액세스를 제거하고 볼륨을 공유하는 다른 네임스페이스에 대한 액세스는 유지합니다. 볼륨을 참조하는 모든 네임스페이스가 제거되면 Trident는 해당 볼륨을 삭제합니다.
 
 
 
+[[use-tridentctl-get-to-query-subordinate-volumes]]
 ==  `tridentctl get`를 사용하여 하위 볼륨을 쿼리합니다
 
 이 [`tridentctl` 유틸리티를 사용하면  `get` 명령을 실행하여 하위 볼륨을 가져올 수 있습니다. 자세한 내용은 link:../trident-reference/trident-cl.html[`tridentctl` 명령 및 옵션]을 참조하십시오.
@@ -157,6 +162,7 @@ Usage:
 
 
 
+[[limitations]]
 == 제한 사항
 
 * Trident는 대상 네임스페이스가 공유 볼륨에 쓰기 작업을 하는 것을 막을 수 없습니다. 공유 볼륨 데이터가 덮어쓰이는 것을 방지하려면 파일 잠금 또는 다른 프로세스를 사용해야 합니다.
@@ -166,6 +172,7 @@ Usage:
 
 
 
+[[for-more-information]]
 == 자세한 내용은
 
 교차 네임스페이스 볼륨 액세스에 대한 자세한 내용은 다음을 참조하십시오.

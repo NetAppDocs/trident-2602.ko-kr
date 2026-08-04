@@ -16,6 +16,7 @@ summary: 'Trident 운영자(수동 또는 Helm 사용)를 사용하거나 `tride
 
 
 
+[[critical-information-about-trident-26-02]]
 == Trident 26.02에 대한 중요 정보
 
 *Trident에 대한 다음 중요 정보를 읽어야 합니다.*
@@ -36,11 +37,12 @@ summary: 'Trident 운영자(수동 또는 Helm 사용)를 사용하거나 `tride
 ====
 
 
+[[before-you-begin]]
 == 시작하기 전에
 
 설치 경로와 관계없이 다음 항목이 반드시 필요합니다.
 
-* 지원되는 버전의 Kubernetes가 실행되고 기능 요구 사항이 활성화된 지원되는 Kubernetes 클러스터에 대한 모든 권한이 필요합니다. 자세한 내용은 link:requirements.html["요구사항"]을(를) 참조하십시오.
+* 지원되는 버전의 Kubernetes가 실행되고 기능 요구 사항이 활성화된 지원되는 Kubernetes 클러스터에 대한 모든 권한이 필요합니다. 자세한 내용은 link:../trident-get-started/requirements.html["요구사항"]을(를) 참조하십시오.
 * 지원되는 NetApp 스토리지 시스템에 대한 액세스.
 * 모든 Kubernetes 작업자 노드에서 볼륨을 마운트하는 기능.
 *  `kubectl`(또는 OpenShift를 사용하는 경우  `oc`)가 설치 및 구성되어 사용하려는 Kubernetes 클러스터를 관리하는 Linux 호스트.
@@ -54,12 +56,14 @@ TIP: link:../trident-get-started/intro.html["기본 개념"^]에 대해 아직 �
 
 
 
+[[choose-your-installation-method]]
 == 설치 방법을 선택하십시오
 
 본인에게 맞는 설치 방법을 선택하세요. 결정하기 전에 link:kubernetes-deploy.html#moving-between-installation-methods["방법 간 이동"]에 대한 고려 사항도 검토해야 합니다.
 
 
 
+[[using-the-trident-operator]]
 === Trident 운영자 사용
 
 수동으로 배포하든 Helm을 사용하든, Trident operator는 설치를 간소화하고 Trident 리소스를 동적으로 관리하는 훌륭한 방법입니다. link:kubernetes-customize-deploy.html["Trident 운영자 배포를 사용자 지정하세요"] `TridentOrchestrator` 사용자 정의 리소스(CR)의 속성을 활용할 수도 있습니다.
@@ -121,6 +125,7 @@ NOTE: 클러스터가 지원되지 않는 버전으로 업그레이드되면 오
 ====
 
 
+[[using-tridentctl]]
 === 사용 `tridentctl`
 
 기존 배포 환경을 업그레이드해야 하거나 배포 환경을 고도로 맞춤 설정하려는 경우 를 고려해야 합니다. 이것은 Trident를 배포하는 기존 방법입니다.
@@ -132,6 +137,7 @@ NOTE: 22.04 릴리스부터 Trident를 설치할 때마다 AES 키를 다시 생
 
 
 
+[[choose-your-installation-mode]]
 == 설치 모드를 선택하십시오
 
 조직에서 요구하는 _설치 모드_(표준, 오프라인 또는 원격)에 따라 배포 프로세스를 결정하십시오.
@@ -171,6 +177,7 @@ NOTE: 레지스트리 구성에 관계없이 CSI 이미지는 하나의 레지�
 ====
 
 
+[[select-the-process-based-on-your-method-and-mode]]
 == 방법 및 모드에 따라 프로세스를 선택합니다
 
 결정을 내린 후 적절한 프로세스를 선택합니다.
@@ -200,6 +207,7 @@ link:kubernetes-deploy-tridentctl.html["표준 또는 오프라인 설치"]
 |===
 
 
+[[moving-between-installation-methods]]
 == 설치 방법 간 이동
 
 설치 방법을 변경할 수도 있습니다. 변경하기 전에 다음 사항을 고려하십시오.
@@ -212,6 +220,7 @@ link:kubernetes-deploy-tridentctl.html["표준 또는 오프라인 설치"]
 
 
 
+[[other-known-configuration-options]]
 == 기타 알려진 구성 옵션
 
 VMWare Tanzu Portfolio 제품에 Trident를 설치할 때:

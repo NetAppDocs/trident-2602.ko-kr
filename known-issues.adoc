@@ -18,6 +18,7 @@ summary: 이번 릴리스에서 알려진 문제점은 다음과 같습니다.
 
 
 
+[[volumesnapshots-not-reaching-readytouse-state]]
 == VolumeSnapshots이 ReadyToUse 상태에 도달하지 못했습니다
 
 [WARNING]
@@ -33,6 +34,7 @@ summary: 이번 릴리스에서 알려진 문제점은 다음과 같습니다.
 
 
 
+[[restoring-restic-backups-of-large-files-can-fail]]
 == 대용량 파일의 Restic 백업 복원이 실패할 수 있습니다
 
 Restic을 사용하여 생성된 Amazon S3 백업에서 30GB 이상의 파일을 복원할 때 복원 작업이 실패할 수 있습니다. 해결 방법으로 Kopia를 데이터 이동 도구로 사용하여 데이터를 백업하십시오(Kopia는 백업 시 기본 데이터 이동 도구입니다). 지침은 https://docs.netapp.com/us-en/trident/trident-protect/trident-protect-protect-apps.html["Trident Protect를 사용하여 애플리케이션을 보호하세요."^]을 참조하십시오.

@@ -18,6 +18,7 @@ summary: Trident Protect를 사용하여 앱에 대한 사용자 지정 실행 �
 
 
 
+[[types-of-execution-hooks]]
 == 실행 후크의 유형
 
 Trident Protect는 실행 가능 시점에 따라 다음과 같은 유형의 실행 후크를 지원합니다.
@@ -32,6 +33,7 @@ Trident Protect는 실행 가능 시점에 따라 다음과 같은 유형의 실
 
 
 
+[[order-of-execution]]
 === 실행 순서
 
 데이터 보호 작업이 실행될 때 실행 후크 이벤트는 다음 순서로 발생합니다.
@@ -62,6 +64,7 @@ NOTE: 스냅샷 실행 전 후크가 Kubernetes 리소스를 추가, 변경 또�
 
 
 
+[[important-notes-about-custom-execution-hooks]]
 == 사용자 지정 실행 후크에 대한 중요 참고 사항
 
 앱 실행 후크를 계획할 때 다음 사항을 고려하십시오.
@@ -77,6 +80,7 @@ NOTE: 실행 후크는 종종 실행되는 애플리케이션의 기능을 제�
 
 
 
+[[execution-hook-filters]]
 == 실행 후크 필터
 
 애플리케이션에 실행 후크를 추가하거나 편집할 때, 후크가 일치할 컨테이너를 관리하기 위해 필터를 추가할 수 있습니다. 필터는 모든 컨테이너에서 동일한 컨테이너 이미지를 사용하지만 각 이미지를 다른 용도로 사용하는 애플리케이션(예: Elasticsearch)에 유용합니다. 필터를 사용하면 실행 후크가 모든 동일한 컨테이너가 아닌 일부 컨테이너에서만 실행되는 시나리오를 만들 수 있습니다. 하나의 실행 후크에 여러 필터를 생성하는 경우 논리 AND 연산자로 결합됩니다. 실행 후크당 최대 10개의 활성 필터를 사용할 수 있습니다.
@@ -88,12 +92,14 @@ NOTE: 복원 또는 클론 작업 후에 실행되는 실행 후크에 네임스
 
 
 
+[[execution-hook-examples]]
 == 실행 후크 예
 
  https://github.com/NetApp/Verda["NetApp Verda GitHub 프로젝트"]를 방문하여 Apache Cassandra 및 Elasticsearch와 같은 인기 애플리케이션의 실제 실행 후크를 다운로드하세요. 또한 예제를 살펴보고 자신만의 사용자 지정 실행 후크를 구성하는 데 필요한 아이디어를 얻을 수 있습니다.
 
 
 
+[[create-an-execution-hook]]
 == 실행 후크를 생성합니다
 
 Trident Protect를 사용하여 앱에 대한 사용자 지정 실행 후크를 생성할 수 있습니다. 실행 후크를 생성하려면 소유자, 관리자 또는 구성원 권한이 필요합니다.
@@ -202,6 +208,7 @@ tridentctl-protect create exechook <my_exec_hook_name> --action <action_type> --
 ====
 
 
+[[manually-run-an-execution-hook]]
 == 수동으로 실행 후크 실행
 
 테스트 목적으로 또는 오류 발생 후 수동으로 실행 후크를 다시 실행해야 하는 경우 수동으로 실행 후크를 실행할 수 있습니다. 수동으로 실행 후크를 실행하려면 소유자, 관리자 또는 멤버 권한이 필요합니다.

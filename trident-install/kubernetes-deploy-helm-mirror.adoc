@@ -16,6 +16,7 @@ Helm을 사용하여 Trident 오퍼레이터를 배포하고 Trident를 설치�
 
 
 
+[[critical-information-about-trident-26-02]]
 == Trident 26.02에 대한 중요 정보
 
 *Trident에 대한 다음 중요 정보를 읽어야 합니다.*
@@ -36,6 +37,7 @@ Helm을 사용하여 Trident 오퍼레이터를 배포하고 Trident를 설치�
 ====
 
 
+[[deploy-the-trident-operator-and-install-trident-using-helm]]
 == Helm을 사용하여 Trident 오퍼레이터를 배포하고 Trident를 설치하십시오
 
 Trident link:https://artifacthub.io/packages/helm/netapp-trident/trident-operator["Helm Chart"^]를 사용하여 Trident 운영자를 배포하고 Trident를 한 번에 설치할 수 있습니다.
@@ -84,6 +86,7 @@ NOTE: 이미 Trident에 대한 네임스페이스를 생성한 경우  `--create
 
 
 
+[[pass-configuration-data-during-install]]
 == 설치 중에 구성 데이터를 전달합니다
 
 설치 중에 구성 데이터를 전달하는 방법에는 두 가지가 있습니다.
@@ -116,6 +119,7 @@ helm install <name> netapp-trident/trident-operator --version 100.2602.0  --crea
 ----
 
 
+[[configuration-options]]
 == 구성 옵션
 
 이 표와 Helm 차트의 일부인  `values.yaml` 파일은 키 목록과 해당 기본값을 제공합니다.

@@ -22,6 +22,7 @@ Trident는 Amazon FSx for NetApp ONTAP 스토리지 관리를 Kubernetes에서 �
 
 
 
+[[install-trident-via-helm]]
 == Helm을 통해 Trident 설치
 
 [role="tabbed-block"]
@@ -106,12 +107,14 @@ helm install trident-operator netapp-trident/trident-operator --version 100.2502
 ====
 
 
+[[install-trident-via-the-eks-add-on]]
 == EKS 애드온을 통해 Trident를 설치하십시오
 
 Trident EKS 애드온에는 최신 보안 패치와 버그 수정 사항이 포함되어 있으며, AWS에서 Amazon EKS와의 호환성을 검증받았습니다. EKS 애드온을 사용하면 Amazon EKS 클러스터의 보안과 안정성을 지속적으로 유지할 수 있으며, 애드온 설치, 구성 및 업데이트에 필요한 작업량을 줄일 수 있습니다.
 
 
 
+[[prerequisites]]
 === 필수 구성 요소
 
 AWS EKS용 Trident 애드온을 구성하기 전에 다음 사항을 확인하십시오.
@@ -128,6 +131,7 @@ AWS EKS용 Trident 애드온을 구성하기 전에 다음 사항을 확인하�
 
 
 
+[[enable-the-trident-add-on-for-aws]]
 === AWS용 Trident 추가 기능을 활성화하세요
 
 [role="tabbed-block"]
@@ -235,6 +239,7 @@ eksctl create addon --name netapp_trident-operator --cluster <cluster_name> --fo
 ====
 
 
+[[update-the-trident-eks-add-on]]
 === Trident EKS 애드온 업데이트
 
 [role="tabbed-block"]
@@ -299,6 +304,7 @@ eksctl update addon --name netapp_trident-operator --version v25.6.0-eksbuild.1 
 ====
 
 
+[[uninstallremove-the-trident-eks-add-on]]
 === Trident EKS 애드온 제거/삭제
 
 Amazon EKS 애드온을 제거하는 두 가지 옵션이 있습니다.

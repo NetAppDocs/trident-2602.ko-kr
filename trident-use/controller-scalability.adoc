@@ -16,10 +16,12 @@ Trident는 여러 스토리지 드라이버에 걸쳐 향상된 동시성을 통
 
 
 
+[[key-concepts-and-definitions]]
 == 핵심 개념 및 정의
 
 
 
+[[controller-scalability]]
 === 컨트롤러 확장성
 
 컨트롤러 확장성은 Trident 컨트롤러가 단일 잠금 뒤에서 여러 스토리지 작업을 직렬화하는 대신 병렬로 처리할 수 있는 능력을 의미합니다. 이러한 작업에는 볼륨 생성, 삭제, 크기 조정, 스냅샷 생성 및 삭제, 볼륨 게시 및 게시 취소, 백엔드 관리가 포함됩니다.
@@ -28,12 +30,14 @@ Trident는 여러 스토리지 드라이버에 걸쳐 향상된 동시성을 통
 
 
 
+[[controller-scalability-support]]
 == 컨트롤러 확장성 지원
 
 Trident는 스토리지 드라이버에 따라 다양한 성숙도 수준의 컨트롤러 확장성을 지원합니다.
 
 
 
+[[general-availability]]
 === 일반 가용성
 
 다음 드라이버는 Trident 26.02의 정식 출시 버전에서 컨트롤러 확장성을 지원합니다.
@@ -50,12 +54,14 @@ Trident는 스토리지 드라이버에 따라 다양한 성숙도 수준의 컨
 ====
 
 
+[[enable-controller-scalability]]
 == 컨트롤러 확장성 활성화
 
 컨트롤러 확장성은  `enableConcurrency` 구성 옵션을 통해 제어됩니다. 이 옵션은 Trident 설치 중 또는 기존 배포 업데이트 시 명시적으로 활성화해야 합니다.
 
 
 
+[[trident-operator-deployment]]
 === Trident 운영자 배포
 
 Trident operator에서 컨트롤러 확장성을 활성화하려면,  `enableConcurrency`를  `true`로  `TridentOrchestrator` 커스텀 리소스에서 설정하세요.
@@ -100,6 +106,7 @@ kubectl get torc trident -o jsonpath='{.status.currentInstallationParams.enableC
 ----
 
 
+[[helm-deployment]]
 === Helm 배포
 
 Helm을 사용하여 컨트롤러 확장성을 활성화하려면  `enableConcurrency` 값을  `true`로 설정하십시오.
@@ -135,6 +142,7 @@ helm install trident netapp-trident/trident-operator --namespace trident --creat
 ----
 
 
+[[tridentctl-deployment]]
 === tridentctl 배포
 
  `tridentctl`을(를) 사용하여 컨트롤러 확장성을 활성화하려면 설치 중에  `--enable-concurrency` 플래그를 전달하십시오.
@@ -160,6 +168,7 @@ tridentctl install -n trident --enable-concurrency
 ----
 
 
+[[verify-controller-scalability-is-enabled]]
 === 컨트롤러 확장성이 활성화되어 있는지 확인하십시오
 
 컨트롤러 확장성을 활성화한 후 컨트롤러 파드 로그를 확인하여 Trident 컨트롤러가 동시 실행 기능을 활성화한 상태로 실행 중인지 확인하십시오.
@@ -172,6 +181,7 @@ kubectl logs -n trident deploy/trident-controller | grep -i concurrency
 
 
 
+[[technical-preview]]
 === 기술 미리 보기
 
 다음 드라이버는 Trident 26.02에서 기술 미리 보기로 컨트롤러 확장성을 지원합니다.
@@ -189,6 +199,7 @@ kubectl logs -n trident deploy/trident-controller | grep -i concurrency
 
 
 
+[[concurrency-behavior]]
 == 동시성 동작
 
 컨트롤러 확장성이 활성화된 경우:
@@ -202,6 +213,7 @@ kubectl logs -n trident deploy/trident-controller | grep -i concurrency
 
 
 
+[[known-limitations-and-considerations]]
 == 알려진 제한 사항 및 고려 사항
 
 컨트롤러 확장성에는 다음 사항이 적용됩니다.
@@ -220,6 +232,7 @@ kubectl logs -n trident deploy/trident-controller | grep -i concurrency
 
 
 
+[[caveats-and-limitations]]
 == 주의사항 및 제한사항
 
 Trident 26.02에는 다음과 같은 제한 사항이 적용됩니다.
@@ -237,6 +250,7 @@ Trident 26.02에는 다음과 같은 제한 사항이 적용됩니다.
 
 
 
+[[recommendations]]
 == 권장 사항
 
 * 높은 확장성이 필요한 운영 환경에는 일반 가용성(GA) 드라이버를 사용하십시오

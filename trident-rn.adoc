@@ -19,12 +19,14 @@ WARNING: 설치 프로그램 zip 파일에 포함된 Linux용 `tridentctl` 바�
 
 
 
+[[whats-new-in-26-02-1]]
 == 26.02.1의 새로운 기능
 
 NetApp Trident 및 Trident Protect의 새로운 기능, 개선 사항, 버그 수정 및 사용 중단 예정 기능에 대해 알아보세요.
 
 
 
+[[trident]]
 === Trident
 
 
@@ -52,6 +54,7 @@ NetApp Trident 및 Trident Protect의 새로운 기능, 개선 사항, 버그 �
 
 
 
+[[trident-protect]]
 === Trident Protect
 
 
@@ -69,12 +72,14 @@ NetApp Trident 및 Trident Protect의 새로운 기능, 개선 사항, 버그 �
 
 
 
+[[whats-new-in-26-02]]
 == 26.02의 새로운 기능
 
 NetApp Trident 및 Trident Protect의 새로운 기능, 개선 사항, 버그 수정 및 사용 중단 예정 기능에 대해 알아보세요.
 
 
 
+[[trident]]
 === Trident
 
 
@@ -147,6 +152,7 @@ NOTE: 운영 환경에서는 사용할 수 없습니다.
 
 
 
+[[trident-protect]]
 === Trident Protect
 
 
@@ -172,12 +178,14 @@ NOTE: 운영 환경에서는 사용할 수 없습니다.
 
 
 
+[[whats-new-in-25-10]]
 == 25.10의 새로운 기능
 
 개선 사항, 수정 사항 및 사용 중단을 포함한 Trident 및 Trident Protect의 새로운 기능에 대해 알아보십시오.
 
 
 
+[[trident]]
 === Trident
 
 
@@ -241,6 +249,7 @@ NOTE: 운영 환경에서는 사용할 수 없습니다.
 
 
 
+[[trident-protect]]
 === Trident Protect
 
 NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident CSI 스토리지 프로비저너를 기반으로 하는 스테이트풀 Kubernetes 애플리케이션의 기능과 가용성을 향상시키는 고급 애플리케이션 데이터 관리 기능을 제공합니다.
@@ -265,10 +274,12 @@ link:https://docs.netapp.com/us-en/trident/trident-protect/trident-protect-prote
 
 
 
+[[changes-in-25-06-2]]
 == 25.06.2의 변경 사항
 
 
 
+[[trident]]
 === Trident
 
 
@@ -280,10 +291,12 @@ link:https://docs.netapp.com/us-en/trident/trident-protect/trident-protect-prote
 
 
 
+[[changes-in-25-06-1]]
 == 25.06.1의 변경 사항
 
 
 
+[[trident]]
 === Trident
 
 
@@ -307,10 +320,12 @@ IMPORTANT: SolidFire를 사용하는 고객의 경우 볼륨 게시 취소 시 �
 
 
 
+[[changes-in-25-06]]
 == 25.06의 변경 사항
 
 
 
+[[trident]]
 === Trident
 
 
@@ -380,6 +395,7 @@ NOTE: 이 기능은 실험적인 기능이며 현재 ONTAP-SAN 드라이버(iSCS
 
 
 
+[[trident-protect]]
 === Trident Protect
 
 NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident CSI 스토리지 프로비저너를 기반으로 하는 스테이트풀 Kubernetes 애플리케이션의 기능과 가용성을 향상시키는 고급 애플리케이션 데이터 관리 기능을 제공합니다.
@@ -411,10 +427,12 @@ NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident 
 
 
 
+[[changes-in-25-02-1]]
 == 25.02.1의 변경 사항
 
 
 
+[[trident]]
 === Trident
 
 
@@ -431,12 +449,14 @@ NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident 
 
 
 
+[[changes-in-25-02]]
 == 25.02의 변경 사항
 
 Trident 25.02부터 새로운 기능 요약에서 Trident 및 Trident Protect 릴리스 모두에 대한 개선 사항, 수정 사항 및 사용 중단에 대한 세부 정보를 제공합니다.
 
 
 
+[[trident]]
 === Trident
 
 
@@ -486,6 +506,7 @@ Trident 25.02부터 새로운 기능 요약에서 Trident 및 Trident Protect �
 
 
 
+[[trident-protect]]
 === Trident Protect
 
 NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident CSI 스토리지 프로비저너를 기반으로 하는 스테이트풀 Kubernetes 애플리케이션의 기능과 가용성을 향상시키는 고급 애플리케이션 데이터 관리 기능을 제공합니다.
@@ -519,10 +540,12 @@ NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident 
 
 
 
+[[changes-in-24-10-1]]
 == 24.10.1의 변경 사항
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * *Kubernetes*: Kubernetes 1.32 지원이 추가되었습니다.
@@ -531,6 +554,7 @@ NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident 
 
 
 
+[[fixes]]
 === 수정 사항
 
 * 자동 내보내기 정책에서 누락된 노드 IP 주소 문제를 수정했습니다(link:https://github.com/NetApp/trident/issues/965["문제 #965"]).
@@ -541,10 +565,12 @@ NetApp Trident Protect는 NetApp ONTAP 스토리지 시스템과 NetApp Trident 
 
 
 
+[[changes-in-24-10]]
 == 24.10의 변경 사항
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Google Cloud NetApp Volumes 드라이버가 이제 NFS 볼륨용으로 정식 출시되었으며 영역 인식 프로비저닝을 지원합니다.
@@ -590,6 +616,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[fixes]]
 === 수정 사항
 
 * *Kubernetes*:
@@ -606,6 +633,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 * *Kubernetes:*
@@ -618,16 +646,19 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[product-rebranding]]
 === 제품 리브랜딩
 
 24.10 릴리스부터 Astra Trident는 Trident(NetApp Trident)로 브랜드가 변경되었습니다. 이 브랜드 변경은 Trident의 기능, 지원되는 플랫폼 또는 상호 운용성에 영향을 주지 않습니다.
 
 
 
+[[changes-in-24-06]]
 == 24.06의 변경 사항
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * **중요**:  `limitVolumeSize` 매개변수는 이제 ONTAP 이코노미 드라이버에서 qtree/LUN 크기를 제한합니다. 해당 드라이버에서 FlexVol 크기를 제어하려면 새  `limitVolumePoolSize` 매개변수를 사용하십시오. (link:https://github.com/NetApp/trident/issues/341["문제 #341"]).
@@ -654,6 +685,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[fixes]]
 === 수정 사항
 
 * 오래된 트랜잭션으로 인한 Trident 설치 실패를 수정했습니다.
@@ -666,10 +698,12 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[changes-in-24-02]]
 == 24.02의 변경 사항
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Cloud Identity 지원이 추가되었습니다.
@@ -692,6 +726,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[fixes]]
 === 수정 사항
 
 * ACP가 활성화되지 않은 경우 ACP 경고 메시지가 수정되었습니다(link:https://github.com/NetApp/trident/issues/866["문제 #866"]).
@@ -700,6 +735,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 * 멀티 플랫폼 이미지 매니페스트에서 in-toto 증명 프레임워크를 제거했습니다.
@@ -707,10 +743,12 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[changes-in-23-10]]
 == 23.10의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 * ontap-nas 및 ontap-nas-flexgroup 스토리지 드라이버의 경우 새롭게 요청된 크기가 전체 볼륨 크기보다 작으면 고정 볼륨 확장이 적용됩니다(link:https://github.com/NetApp/trident/issues/834["문제 #834"^]).
@@ -721,6 +759,7 @@ link:./trident-protect/learn-about-trident-protect.html["Trident Protect에 대�
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 
@@ -740,16 +779,19 @@ Kubernetes 1.28에 대한 지원이 추가되었습니다.
 
 
 
+[[changes-in-23-07-1]]
 == 23.07.1의 변경 사항
 
 *Kubernetes:* 다운타임 없는 업그레이드를 지원하기 위해 데몬셋 삭제 문제를 수정했습니다(link:https://github.com/NetApp/trident/issues/740["문제 #740"^]).
 
 
 
+[[changes-in-23-07]]
 == 23.07의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 
@@ -773,6 +815,7 @@ Kubernetes 1.28에 대한 지원이 추가되었습니다.
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 
@@ -808,6 +851,7 @@ ONTAP-SAN 드라이버에 대한 TCP를 통한 NVMe 기술 미리 보기 지원�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 
@@ -821,6 +865,7 @@ ONTAP-SAN 드라이버에 대한 TCP를 통한 NVMe 기술 미리 보기 지원�
 
 
 
+[[changes-in-23-04]]
 == 23.04의 변경 사항
 
 
@@ -828,6 +873,7 @@ IMPORTANT: ONTAP-SAN-* 볼륨에 대한 강제 볼륨 분리는 Non-Graceful Nod
 
 
 
+[[fixes]]
 === 수정 사항
 
 * 사양에 지정된 경우 설치 시 IPv6 localhost를 사용하도록 Trident Operator를 수정했습니다.
@@ -844,6 +890,7 @@ IMPORTANT: ONTAP-SAN-* 볼륨에 대한 강제 볼륨 분리는 Non-Graceful Nod
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Kubernetes:
@@ -865,16 +912,19 @@ IMPORTANT: ONTAP-SAN-* 볼륨에 대한 강제 볼륨 분리는 Non-Graceful Nod
 
 
 
+[[deprecations]]
 === 사용 중단
 
 **Kubernetes:** ontap-san 및 ontap-san-economy 드라이버를 구성할 때 백엔드 범위의 igroup이 더 이상 생성되지 않습니다(link:https://github.com/NetApp/trident/issues/758["문제 #758"]).
 
 
 
+[[changes-in-23-01-1]]
 == 23.01.1의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 * 사양에 지정된 경우 설치 시 IPv6 localhost를 사용하도록 Trident Operator를 수정했습니다.
@@ -886,6 +936,7 @@ IMPORTANT: ONTAP-SAN-* 볼륨에 대한 강제 볼륨 분리는 Non-Graceful Nod
 
 
 
+[[changes-in-23-01]]
 == 23.01의 변경 사항
 
 
@@ -893,6 +944,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[fixes]]
 === 수정 사항
 
 * Kubernetes: Helm을 통한 Trident 설치 문제를 해결하기 위해 Pod Security Policy 생성을 제외하는 옵션을 추가했습니다(link:https://github.com/NetApp/trident/issues/794["이슈 #783, #794"^]).
@@ -900,6 +952,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 .Kubernetes
@@ -922,6 +975,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 * Kubernetes: 지원되는 최소 Kubernetes를 1.21로 업데이트했습니다.
@@ -930,6 +984,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[changes-in-22-10]]
 == 22.10의 변경 사항
 
 *Trident 22.10으로 업그레이드하기 전에 다음의 중요 정보를 반드시 읽어주십시오.*
@@ -947,6 +1002,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 ====
 
 
+[[fixes]]
 === 수정 사항
 
 *  `credentials` 필드를 사용하여 생성된 ONTAP 백엔드가 22.07.0 업그레이드 중에 온라인 상태가 되지 않는 특정 문제를 수정했습니다(link:https://github.com/NetApp/trident/issues/759["문제 #759"^]).
@@ -959,6 +1015,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Kubernetes:
@@ -978,6 +1035,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 * **Kubernetes:** 지원되는 최소 Kubernetes를 1.20로 업데이트했습니다.
@@ -987,10 +1045,12 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[changes-in-22-07]]
 == 22.07의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 **Kubernetes**
@@ -1001,6 +1061,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * CSI 이미지의 기본 레지스트리를 k8s.gcr.io에서 registry.k8s.io로 전환
@@ -1012,6 +1073,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[deprecations]]
 === 사용 중단
 
 * **Kubernetes:** 지원되는 최소 Kubernetes를 1.19로 업데이트했습니다.
@@ -1020,6 +1082,7 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[removals]]
 === 제거
 
 * AWS CVS 드라이버(22.04부터 더 이상 사용되지 않음)가 제거되었습니다.
@@ -1033,12 +1096,14 @@ IMPORTANT: Kubernetes 1.27는 이제 Trident에서 지원됩니다. Kubernetes�
 
 
 
+[[documentation]]
 === 설명서
 
 Trident 설치 시 활성화되는 권한에 대한 자세한 내용을 담은 새로운 link:https://docs.netapp.com/us-en/trident/trident-reference/pod-security.html["Pod 보안 표준"] (PSS) 섹션이 추가되었습니다.
 
 
 
+[[changes-in-22-04]]
 == 22.04의 변경 사항
 
 NetApp은 제품과 서비스를 지속적으로 개선하고 향상시키고 있습니다. 다음은 Trident의 최신 기능 중 일부입니다. 이전 릴리스에 대한 정보는 https://docs.netapp.com/us-en/trident/earlier-versions.html["이전 버전의 문서"]를 참조하십시오.
@@ -1048,6 +1113,7 @@ IMPORTANT: 이전 Trident 릴리스에서 업그레이드하고 Azure NetApp Fil
 
 
 
+[[fixes]]
 === 수정 사항
 
 * iSCSI 이니시에이터 이름 구문 분석 기능이 개선되었습니다. (link:https://github.com/NetApp/trident/issues/681["GitHub 이슈 #681"^])
@@ -1062,6 +1128,7 @@ IMPORTANT: 이전 Trident 릴리스에서 업그레이드하고 Azure NetApp Fil
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Trident의 보안 엔드포인트로 들어오는 연결에는 이제 최소 TLS 1.3이 필요합니다. (link:https://github.com/NetApp/trident/issues/698["GitHub 이슈 #698"^])
@@ -1072,16 +1139,19 @@ IMPORTANT: 이전 Trident 릴리스에서 업그레이드하고 Azure NetApp Fil
 
 
 
+[[removals]]
 === 제거
 
 E-Series 드라이버(20.07 이후 비활성화됨)가 제거되었습니다.
 
 
 
+[[changes-in-22-01-1]]
 == 22.01.1의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 * 삭제된 노드에서 볼륨 게시 취소 관련 문제를 수정했습니다. (link:https://github.com/NetApp/trident/issues/691["GitHub 이슈 #691"])
@@ -1090,10 +1160,12 @@ E-Series 드라이버(20.07 이후 비활성화됨)가 제거되었습니다.
 
 
 
+[[changes-in-22-01-0]]
 == 22.01.0의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 * *Kubernetes:* 대규모 클러스터의 노드 등록 백오프 재시도 시간을 늘립니다.
@@ -1108,6 +1180,7 @@ E-Series 드라이버(20.07 이후 비활성화됨)가 제거되었습니다.
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * Kubernetes 개선 사항:
@@ -1122,12 +1195,14 @@ E-Series 드라이버(20.07 이후 비활성화됨)가 제거되었습니다.
 
 
 
+[[deprecations]]
 === 사용 중단
 
 Trident REST 인터페이스는 127.0.0.1 또는 [::1] 주소에서만 수신 및 서비스를 제공할 수 있습니다
 
 
 
+[[changes-in-21-10-1]]
 == 21.10.1의 변경 사항
 
 
@@ -1135,6 +1210,7 @@ WARNING: v21.10.0 릴리스에는 노드를 Kubernetes 클러스터에서 제거
 
 
 
+[[fixes]]
 === 수정 사항
 
 * GCP CVS 백엔드에서 볼륨을 가져올 때 가져오기 실패를 초래하는 잠재적 경합 상태를 수정했습니다.
@@ -1144,10 +1220,12 @@ WARNING: v21.10.0 릴리스에는 노드를 Kubernetes 클러스터에서 제거
 
 
 
+[[changes-in-21-10-0]]
 == 21.10.0의 변경 사항
 
 
 
+[[fixes]]
 === 수정 사항
 
 * XFS 볼륨의 복제본이 원본 볼륨과 동일한 노드에 마운트될 수 없었던 문제를 수정했습니다(GitHub 이슈 514).
@@ -1168,6 +1246,7 @@ WARNING: v21.10.0 릴리스에는 노드를 Kubernetes 클러스터에서 제거
 
 
 
+[[enhancements]]
 === 향상된 기능
 
 * GCP-CVS Performance 볼륨에 대한 `unixPermissions` 옵션 지원이 추가되었습니다.
@@ -1183,6 +1262,7 @@ WARNING: v21.10.0 릴리스에는 노드를 Kubernetes 클러스터에서 제거
 
 
 
+[[experimental-enhancements]]
 === 실험적 개선 사항
 
 *  `ontap-san` 드라이버에 볼륨 복제 지원 기능이 추가되었습니다.
@@ -1191,6 +1271,7 @@ WARNING: v21.10.0 릴리스에는 노드를 Kubernetes 클러스터에서 제거
 
 
 
+[[known-issues]]
 == 알려진 문제점
 
 알려진 문제점은 제품을 성공적으로 사용하는 데 방해가 될 수 있는 문제를 나타냅니다.
@@ -1214,6 +1295,7 @@ NOTE: ONTAP SAN 백엔드에서 `dataLIF`를 지정할 수 없습니다. Trident
 
 
 
+[[find-more-information]]
 == 자세한 정보 찾기
 
 * https://github.com/NetApp/trident["Trident GitHub"^]

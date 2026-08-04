@@ -21,6 +21,7 @@ link:prereqs-docker.html["배포를 위한 사전 요구 사항"]를 참조하�
 
 
 
+[[docker-managed-plugin-method-version-1-1317-03-and-later]]
 == Docker 관리형 플러그인 방식(버전 1.13/17.03 이상)
 
 .시작하기 전에
@@ -121,6 +122,7 @@ docker volume rm firstVolume
 
 
 
+[[traditional-method-version-1-12-or-earlier]]
 == 기존 방식(버전 1.12 이하)
 
 .시작하기 전에
@@ -231,6 +233,7 @@ docker volume rm trident_2
 
 
 
+[[start-trident-at-system-startup]]
 == 시스템 시작 시 Trident를 시작합니다
 
 systemd 기반 시스템용 샘플 유닛 파일은 Git 저장소의  `contrib/trident.service.example`에서 찾을 수 있습니다. RHEL에서 파일을 사용하려면 다음을 수행합니다.

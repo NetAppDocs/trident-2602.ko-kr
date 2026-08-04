@@ -16,6 +16,7 @@ REST API를 사용하여 리소스 객체를 읽고 쓰면 Kubernetes 및 Triden
 
 
 
+[[how-do-the-objects-interact-with-one-another]]
 == 객체는 서로 어떻게 상호 작용합니까?
 
 객체, 그 용도, 그리고 상호 작용 방식을 이해하는 가장 쉬운 방법은 아마도 Kubernetes 사용자의 스토리지 요청 하나를 따라가는 것일 겁니다.
@@ -36,6 +37,7 @@ TIP: Kubernetes 객체에 대한 자세한 내용은 Kubernetes 문서의  https
 
 
 
+[[kubernetes-persistentvolumeclaim-objects]]
 == Kubernetes `PersistentVolumeClaim` 객체
 
 Kubernetes `PersistentVolumeClaim` 객체는 Kubernetes 클러스터 사용자가 스토리지에 대해 요청하는 사항입니다.
@@ -98,6 +100,7 @@ Trident는 `cloneFromPVC` 및 `splitOnClone` 어노테이션도 제공하여 클
 
 
 
+[[kubernetes-persistentvolume-objects]]
 == Kubernetes `PersistentVolume` 객체
 
 Kubernetes `PersistentVolume` 객체는 Kubernetes 클러스터에서 사용할 수 있도록 제공되는 스토리지 영역을 나타냅니다. 이 객체는 해당 객체를 사용하는 Pod와는 독립적인 수명 주기를 가집니다.
@@ -113,6 +116,7 @@ Trident 기반 `StorageClass`을 참조하는 PVC를 생성하면 Trident는 해
 
 
 
+[[kubernetes-storageclass-objects]]
 == Kubernetes `StorageClass` 객체
 
 Kubernetes `StorageClass` 객체는 `PersistentVolumeClaims`에서 이름으로 지정되어 속성 집합을 가진 스토리지를 프로비저닝합니다. 스토리지 클래스 자체는 사용할 프로비저너를 식별하고 프로비저너가 이해할 수 있는 용어로 속성 집합을 정의합니다.
@@ -157,6 +161,7 @@ volumeBindingMode: Immediate
 
 
 
+[[storage-pool-selection-attributes]]
 === 스토리지 풀 선택 속성
 
 이러한 매개변수는 특정 유형의 볼륨을 프로비저닝하는 데 사용할 Trident 관리 스토리지 풀을 결정합니다.
@@ -206,6 +211,7 @@ ontap-nas, ontap-nas-economy, ontap-nas-flexgroup, ontap-san, solidfire-san, azu
 
 
 
+[[kubernetes-attributes]]
 === Kubernetes 속성
 
 이러한 속성은 동적 프로비저닝 중에 Trident가 스토리지 풀/백엔드를 선택하는 데 영향을 미치지 않습니다. 대신, 이러한 속성은 Kubernetes 영구 볼륨에서 지원하는 매개변수를 제공할 뿐입니다. 워커 노드는 파일 시스템 생성 작업을 담당하며 xfsprogs와 같은 파일 시스템 유틸리티가 필요할 수 있습니다.
@@ -241,6 +247,7 @@ NFS 스토리지 드라이버의 경우 파일 시스템은 이미 NFS 내보내
 ====
 
 
+[[kubernetes-volumesnapshotclass-objects]]
 == Kubernetes `VolumeSnapshotClass` 객체
 
 Kubernetes `VolumeSnapshotClass` 객체는 `StorageClasses`와 유사합니다. 이러한 객체는 여러 스토리지 클래스를 정의하는 데 도움이 되며 볼륨 스냅샷에서 참조되어 스냅샷을 필요한 스냅샷 클래스와 연결합니다. 각 볼륨 스냅샷은 하나의 볼륨 스냅샷 클래스와 연결됩니다.
@@ -260,6 +267,7 @@ deletionPolicy: Delete
 
 
 
+[[kubernetes-volumesnapshot-objects]]
 == Kubernetes `VolumeSnapshot` 객체
 
 Kubernetes `VolumeSnapshot` 객체는 볼륨의 스냅샷 생성을 요청하는 것입니다. PVC가 사용자가 볼륨을 요청하는 것을 나타내는 것처럼, 볼륨 스냅샷은 사용자가 기존 PVC의 스냅샷 생성을 요청하는 것입니다.
@@ -272,6 +280,7 @@ NOTE: VolumeSnapshot의 수명 주기는 소스 PVC와 무관합니다. 스냅�
 
 
 
+[[kubernetes-volumesnapshotcontent-objects]]
 == Kubernetes `VolumeSnapshotContent` 객체
 
 Kubernetes `VolumeSnapshotContent` 객체는 이미 프로비저닝된 볼륨에서 생성된 스냅샷을 나타냅니다. 이는 `PersistentVolume`와 유사하며 스토리지 클러스터에 프로비저닝된 스냅샷을 의미합니다.  `PersistentVolumeClaim` 및 `PersistentVolume` 객체와 마찬가지로 스냅샷이 생성되면 `VolumeSnapshotContent` 객체는 스냅샷 생성을 요청한 `VolumeSnapshot` 객체와 일대일 매핑을 유지합니다.
@@ -285,6 +294,7 @@ NOTE: 일반적으로  `VolumeSnapshotContent` 객체를 관리할 필요는 없
 
 
 
+[[kubernetes-volumegroupsnapshotclass-objects]]
 == Kubernetes `VolumeGroupSnapshotClass` 객체
 
 Kubernetes `VolumeGroupSnapshotClass` 객체는 `VolumeSnapshotClass`와 유사합니다. 이러한 객체는 여러 스토리지 클래스를 정의하는 데 도움이 되며, 볼륨 그룹 스냅샷에서 참조되어 스냅샷을 필요한 스냅샷 클래스와 연결합니다. 각 볼륨 그룹 스냅샷은 하나의 볼륨 그룹 스냅샷 클래스와 연결됩니다.
@@ -306,6 +316,7 @@ deletionPolicy: Delete
 
 
 
+[[kubernetes-volumegroupsnapshot-objects]]
 == Kubernetes `VolumeGroupSnapshot` 객체
 
 Kubernetes `VolumeGroupSnapshot` 객체는 여러 볼륨의 스냅샷을 생성해 달라는 요청입니다. PVC가 사용자가 볼륨에 대해 요청하는 것을 나타내는 것처럼, 볼륨 그룹 스냅샷은 사용자가 기존 PVC의 스냅샷을 생성해 달라는 요청입니다.
@@ -317,6 +328,7 @@ NOTE: VolumeGroupSnapshot의 수명 주기는 소스 PVC와 무관합니다. 소
 
 
 
+[[kubernetes-volumegroupsnapshotcontent-objects]]
 == Kubernetes `VolumeGroupSnapshotContent` 객체
 
 Kubernetes `VolumeGroupSnapshotContent` 객체는 이미 프로비저닝된 볼륨에서 생성된 그룹 스냅샷을 나타냅니다. 이는 `PersistentVolume`와 유사하며 스토리지 클러스터에 프로비저닝된 스냅샷을 의미합니다.  `PersistentVolumeClaim` 및 `PersistentVolume` 객체와 마찬가지로 스냅샷이 생성되면 `VolumeSnapshotContent` 객체는 스냅샷 생성을 요청한 `VolumeSnapshot` 객체와 일대일 매핑을 유지합니다.
@@ -327,6 +339,7 @@ Kubernetes `VolumeGroupSnapshotContent` 객체는 이미 프로비저닝된 볼�
 
 
 
+[[kubernetes-customresourcedefinition-objects]]
 == Kubernetes `CustomResourceDefinition` 객체
 
 Kubernetes 사용자 정의 리소스는 관리자가 정의하고 유사한 객체를 그룹화하는 데 사용되는 Kubernetes API의 엔드포인트입니다. Kubernetes는 객체 모음을 저장하기 위한 사용자 정의 리소스 생성을 지원합니다. 이러한 리소스 정의는 `kubectl get crds`을 실행하여 얻을 수 있습니다.
@@ -345,6 +358,7 @@ Trident의 CRD에 대해 유념해야 할 몇 가지 사항은 다음과 같습�
 
 
 
+[[trident-storageclass-objects]]
 == Trident `StorageClass` 오브젝트
 
 Trident는 프로비저너 필드에  `csi.trident.netapp.io`를 지정하는 Kubernetes  `StorageClass` 오브젝트에 대해 일치하는 스토리지 클래스를 생성합니다. 스토리지 클래스 이름은 해당 Kubernetes  `StorageClass` 오브젝트의 이름과 일치합니다.
@@ -358,6 +372,7 @@ REST API를 사용하여 스토리지 클래스 구성을 생성하면 스토리
 
 
 
+[[trident-backend-objects]]
 == Trident 백엔드 객체
 
 백엔드는 Trident가 볼륨을 프로비저닝하는 스토리지 공급자를 나타냅니다. 단일 Trident 인스턴스는 여러 백엔드를 관리할 수 있습니다.
@@ -369,6 +384,7 @@ NOTE: 이는 사용자가 직접 생성하고 관리하는 두 가지 객체 유
 
 
 
+[[trident-storagepool-objects]]
 == Trident `StoragePool` 오브젝트
 
 스토리지 풀은 각 백엔드에서 프로비저닝에 사용할 수 있는 개별 위치를 나타냅니다. ONTAP의 경우 이는 SVM의 애그리게이트에 해당합니다. NetApp HCI/SolidFire의 경우 이는 관리자가 지정한 QoS 대역에 해당합니다. 각 스토리지 풀에는 성능 특성과 데이터 보호 특성을 정의하는 여러 가지 스토리지 속성이 있습니다.
@@ -377,6 +393,7 @@ NOTE: 이는 사용자가 직접 생성하고 관리하는 두 가지 객체 유
 
 
 
+[[trident-volume-objects]]
 == Trident `Volume` 오브젝트
 
 볼륨은 프로비저닝의 기본 단위로, NFS 공유, iSCSI 및 FC LUN과 같은 백엔드 엔드포인트를 포함합니다. Kubernetes에서 이러한 볼륨은 `PersistentVolumes`에 직접적으로 대응합니다. 볼륨을 생성할 때는 볼륨의 프로비저닝 위치를 결정하는 스토리지 클래스와 크기를 지정해야 합니다.
@@ -448,6 +465,7 @@ Trident는 볼륨을 생성할 때 `internalName`를 생성합니다. 이 과정
 
 
 
+[[trident-snapshot-objects]]
 == Trident `Snapshot` 오브젝트
 
 스냅샷은 볼륨의 시점 복사본으로, 새 볼륨을 프로비저닝하거나 상태를 복원하는 데 사용할 수 있습니다. Kubernetes에서 스냅샷은 `VolumeSnapshotContent` 객체에 직접적으로 대응합니다. 각 스냅샷은 볼륨과 연결되며, 이 볼륨은 스냅샷의 데이터 소스가 됩니다.
@@ -490,6 +508,7 @@ Kubernetes `VolumeSnapshot` 객체 요청이 생성되면 Trident는 백업 스�
 
 
 
+[[trident-resourcequota-object]]
 == Trident `ResourceQuota` 객체
 
 Trident 데몬셋은 `system-node-critical` 우선순위 클래스(Kubernetes에서 사용 가능한 가장 높은 우선순위 클래스)를 사용하여 정상적인 노드 종료 중에 Trident가 볼륨을 식별하고 정리할 수 있도록 하며, 리소스 부하가 높은 클러스터에서 Trident 데몬셋 파드가 우선순위가 낮은 워크로드를 선점할 수 있도록 합니다.
@@ -520,6 +539,7 @@ spec:
 
 
 
+[[clean-up-resourcequota-if-installation-fails]]
 === 설치 실패 시 정리 작업 `ResourceQuota`
 
  `ResourceQuota` 객체가 생성된 후 설치가 실패하는 드문 경우에는 먼저 link:../trident-managing-k8s/uninstall-trident.html["제거"]를 시도한 다음 다시 설치하십시오.
@@ -528,6 +548,7 @@ spec:
 
 
 
+[[remove-resourcequota]]
 === 제거 `ResourceQuota`
 
 리소스 할당을 직접 제어하려면 다음 명령을 사용하여 Trident `ResourceQuota` 객체를 제거할 수 있습니다.

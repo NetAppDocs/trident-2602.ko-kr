@@ -16,6 +16,7 @@ Trident의 강제 분리 기능은 Kubernetes 클러스터에서 비정상적인
 
 
 
+[[details-about-force-detach]]
 == 강제 분리에 대한 세부 정보
 
 강제 분리는  `ontap-san`,  `ontap-san-economy`,  `ontap-nas` 및  `ontap-nas-economy`에 대해서만 사용할 수 있습니다. 강제 분리를 활성화하기 전에 Kubernetes 클러스터에서 비정상 노드 종료(NGNS)를 활성화해야 합니다. NGNS는 Kubernetes 1.28 이상에서 기본적으로 활성화되어 있습니다. 자세한 내용은 link:https://kubernetes.io/docs/concepts/cluster-administration/node-shutdown/#non-graceful-node-shutdown["Kubernetes: 정상적이지 않은 노드 종료"^]을 참조하십시오.
@@ -44,12 +45,14 @@ NOTE: Trident 컨트롤러는 Trident 노드 Pod에서 노드가 재인증( `dir
 
 
 
+[[details-about-automated-failover]]
 == 자동 페일오버에 대한 세부 정보
 
 link:https://github.com/medik8s/node-healthcheck-operator["노드 상태 점검(NHC) 운영자"^]와의 통합을 통해 강제 분리 프로세스를 자동화할 수 있습니다. 노드 장애가 발생하면 NHC는 Trident 노드 복구(TNR)를 트리거하고 장애가 발생한 노드를 정의하는 TridentNodeRemediation CR을 Trident 네임스페이스에 생성하여 자동으로 강제 분리를 수행합니다. TNR은 노드 장애 발생 시에만 생성되며, 노드가 다시 온라인 상태가 되거나 삭제되면 NHC에서 제거됩니다.
 
 
 
+[[failed-node-pod-removal-process]]
 === 실패한 노드 Pod 제거 프로세스
 
 자동 장애 조치는 장애가 발생한 노드에서 제거할 워크로드를 선택합니다. TNR이 생성되면 TNR 컨트롤러는 해당 노드를 비정상 상태로 표시하여 새로운 볼륨 게시를 방지하고, 강제 분리가 지원되는 Pod와 해당 Pod의 볼륨 연결을 제거하기 시작합니다.
@@ -88,6 +91,7 @@ Pod 제거 동작은 Pod 어노테이션을 사용하여 사용자 지정할 수
 ====
 
 
+[[tridentnoderemediation-cr]]
 === TridentNodeRemediation CR
 
 TridentNodeRemediation(TNR) CR은 장애가 발생한 노드를 정의합니다. TNR의 이름은 장애가 발생한 노드의 이름입니다.
@@ -135,6 +139,7 @@ TNR은 다음 상태 중 하나에 있을 수 있습니다.
 
 
 
+[[enabling-automated-failover]]
 === 자동 페일오버 활성화
 
 *사전 요구 사항*:
@@ -150,7 +155,7 @@ TNR은 다음 상태 중 하나에 있을 수 있습니다.
 
 
 
-NOTE: 아래 <<Integrating Custom Node Health Check Solutions>> 섹션에 명시된 대로 노드 장애를 감지하는 다른 방법을 사용할 수도 있습니다.
+NOTE: 아래 <<사용자 정의 노드 상태 확인 솔루션 통합>> 섹션에 명시된 대로 노드 장애를 감지하는 다른 방법을 사용할 수도 있습니다.
 
 자세한 내용은 link:https://www.redhat.com/en/blog/node-health-check-operator["노드 상태 점검 오퍼레이터"^]을 참조하십시오.
 
@@ -198,6 +203,7 @@ CR의 `unhealthyConditions`는 0초 유예 기간을 사용합니다. 이로 인
 
 
 
+[[additional-setup-information]]
 === 추가 설정 정보
 
 Trident가 강제 분리 기능을 활성화하여 설치되면 NHC와의 통합을 용이하게 하기 위해 Trident 네임스페이스에 두 개의 추가 리소스가 자동으로 생성됩니다: TridentNodeRemediationTemplate(TNRT) 및 ClusterRole.
@@ -246,6 +252,7 @@ rules:
 ----
 
 
+[[k8s-cluster-upgrades-and-maintenance]]
 === K8s 클러스터 업그레이드 및 유지 관리
 
 장애 조치를 방지하려면 노드가 다운되거나 재부팅될 것으로 예상되는 K8s 유지 관리 또는 업그레이드 중에 자동 장애 조치를 일시 중지하십시오. 위에서 설명한 NHC CR을 일시 중지하려면 해당 CR에 패치를 적용하면 됩니다.
@@ -256,6 +263,7 @@ rules:
 
 
 
+[[limitations]]
 === 제한 사항
 
 * I/O 작업은 force-detach에서 지원하는 볼륨에 대해 장애가 발생한 노드에서만 차단됩니다. force-detach에서 지원하는 볼륨/PVC를 사용하는 Pod만 자동으로 제거됩니다.
@@ -264,6 +272,7 @@ rules:
 
 
 
+[[integrating-custom-node-health-check-solutions]]
 === 사용자 정의 노드 상태 확인 솔루션 통합
 
 Node Healthcheck Operator를 대체 노드 장애 감지 도구로 교체하여 자동 장애 조치를 트리거할 수 있습니다. 자동 장애 조치 메커니즘과의 호환성을 보장하려면 사용자 지정 솔루션은 다음을 수행해야 합니다.

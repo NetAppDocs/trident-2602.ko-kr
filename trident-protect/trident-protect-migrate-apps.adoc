@@ -21,12 +21,14 @@ NOTE: 애플리케이션을 마이그레이션할 때 애플리케이션에 대�
 
 
 
+[[backup-and-restore-operations]]
 == 백업 및 복원 작업
 
 다음 시나리오에 대한 백업 및 복원 작업을 수행하려면 특정 백업 및 복원 작업을 자동화할 수 있습니다.
 
 
 
+[[clone-to-same-cluster]]
 === 동일한 클러스터에 클론 생성
 
 애플리케이션을 동일한 클러스터에 복제하려면 스냅샷 또는 백업을 생성하고 데이터를 동일한 클러스터로 복원합니다.
@@ -48,6 +50,7 @@ NOTE: 애플리케이션을 마이그레이션할 때 애플리케이션에 대�
 
 
 
+[[clone-to-different-cluster]]
 === 다른 클러스터로 클론
 
 애플리케이션을 다른 클러스터로 복제(클러스터 간 복제)하려면 소스 클러스터에서 백업을 생성한 다음 해당 백업을 다른 클러스터로 복원하십시오. 타겟 클러스터에 Trident Protect가 설치되어 있는지 확인하십시오.
@@ -63,6 +66,7 @@ NOTE: link:trident-protect-use-snapmirror-replication.html["SnapMirror 복제"]�
 
 
 
+[[migrate-applications-from-one-storage-class-to-another-storage-class]]
 == 한 스토리지 클래스에서 다른 스토리지 클래스로 애플리케이션 마이그레이션
 
 백업을 타겟 스토리지 클래스로 복원하면 애플리케이션을 한 스토리지 클래스에서 다른 스토리지 클래스로 마이그레이션할 수 있습니다.
