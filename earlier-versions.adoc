@@ -22,5 +22,4 @@ Trident 26.02을 실행 중이 아닌 경우 이전 릴리스에 대한 문서�
 * https://docs.netapp.com/us-en/trident-2402/index.html["Trident 24.02"^]
 * https://docs.netapp.com/us-en/trident-2310/index.html["Trident 23.10"^]
 * https://docs.netapp.com/us-en/trident-2307/index.html["Trident 23.07"^]
-* https://docs.netapp.com/us-en/trident-2304/index.html["Trident 23.04"^]
 
